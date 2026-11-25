@@ -739,7 +739,9 @@ def _option_2(r: Results) -> str:
         return ("Not available. No scour pool forms with Classes A to D, so "
                 "there is no basin to build.")
     if r.trial_gives == GIVES_BASIN:
-        return (f"Class {r.largest_valid_class} basin: pool {_fmt1(r.hs)} ft "
+        name = next((c.label for c in r.classes if c.D50 == r.trial.D50),
+                    f"Trial D50 {r.trial.D50:g} ft")
+        return (f"{name} basin: pool {_fmt1(r.hs)} ft "
                 f"deep, {_fmt0(r.Ls)} ft pool + {_fmt0(r.La)} ft apron, "
                 f"{_fmt0(r.Wb)} ft wide at the downstream end. Sec 10.3 "
                 "classes from block 8 beyond the basin to the protection "

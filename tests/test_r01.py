@@ -85,3 +85,13 @@ def test_option_one_eligibility():
     assert "Withheld" in run_case(base())["legacy_unverified_design_text"]["option_1"]
     sub = run_case(asdict(EXAMPLES["culv2"]))
     assert "Engineering judgment" in sub["legacy_unverified_design_text"]["option_1"]
+
+
+def test_option_two_uses_trial_class():
+    from legacy.hec14_outlet_protection import Inputs, analyze
+
+    r = analyze(Inputs(**base(D50_trial=.5)))
+    assert r.largest_valid_class == "B"
+    assert r.option_2.startswith("Class A basin: pool 4.0 ft deep")
+    assert (r.Ls, r.La, r.Wb) == pytest.approx((42, 19.8, 55.2), abs=.3)
+    assert (r.t_approach, r.t_pool) == (1.5, 1)
