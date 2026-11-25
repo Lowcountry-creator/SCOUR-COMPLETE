@@ -402,3 +402,10 @@ def test_migration_reference():
 
     path = Path(__file__).resolve().parents[1] / "HANDOFF.md"
     assert "e0cf993 is a commit (tree a6d743a)" in path.read_text(encoding="utf-8")
+
+
+def test_gui_dependency_note():
+    from pathlib import Path
+
+    path = Path(__file__).resolve().parents[1] / "README.md"
+    assert "python -m tkinter" in path.read_text(encoding="utf-8")
