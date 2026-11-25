@@ -109,3 +109,7 @@ def test_dmax_thickness():
     case = run_case(base(trial_dmax_ft=1.33))
     assert case["thickness"]["pool"]["screen_ft"] == pytest.approx(1.995)
     assert case["thickness"]["approach"]["screen_ft"] == 2.66
+
+
+def test_length_judgments_reported():
+    assert "I07-I12" in run_case(base())["report"]

@@ -13,6 +13,7 @@ from hec14_outlet_protection import Inputs, analyze, flow_area, format_report
 
 STATUS = "DEVELOPMENT ONLY — independent engineering verification pending"
 INFERENCES = [
+    'I07-I12: Station interval is 4 Wo without a valid basin. Target is max(channel, permissible); interpolate linearly, apply a one-LB minimum, round up to 6 ft and size each reach at its upstream velocity. These length rules are engineering judgment.',
     'I15: Block 9 uses a fixed Shields coefficient for bed screening only. Reynolds-dependent HEC-15 sizing and bank checks are pending.',
     'I06: The upper D50/ye limit of 0.7 is the HY-8 screening limit.',
     'I13: Option 1 extends basin and apron relationships to a lined channel by engineering judgment.',
