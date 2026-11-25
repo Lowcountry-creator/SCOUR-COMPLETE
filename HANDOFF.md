@@ -27,3 +27,5 @@ Exact next steps: (1) Owner reads docs/QC_REVIEW_R01.md and rules on H-03, H-07,
 
 ## QC Review R01 verification - 2026-11-25
 Independent second read of docs/QC_REVIEW_R01.md, written to docs/QC_REVIEW_R01_VERIFICATION.md with probe scripts in docs/qc_probes/. No .py engine or framework file and nothing under legacy/ was changed. Tests run: python -m pytest = 40 passed, 1 failed (test_velocity_plot, matplotlib not installed in that environment). Verdict on R01: grade B; almost all findings reproduce, and HEC-14 Chapter 10, HEC-15 and SCDOT citations remain UNVERIFIED by the verifier. Missed by R01: N-01 (High) Option 2 prints the largest valid class with trial-stone pool geometry and thickness; N-02 TW and V_channel silently default to 0; N-03 one NaN or inf case blocks the whole batch JSON export; N-04 to N-06 low. Next: owner reviews N-01 alongside C-02, and N-02 alongside C-03, before framework fixes start.
+
+R01 historical correction: upstream e0cf993 is a commit (tree a6d743a). f0e76fe and 60e21a3 are single-file checkpoints following earlier implementation commits. The upstream example_culv1.json was not migrated.
