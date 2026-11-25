@@ -1,1 +1,6 @@
 # SCOUR-COMPLETE
+Development framework for SCDOT-oriented culvert outlet scour and protection. NOT independently verified for design. Original Mew ten-block engine preserved in legacy/. Start with HANDOFF.md and docs/ARCHITECTURE.md.
+Run: python gui.py (JSON object or array); python scour_complete.py inputs.json --out results.json. Install optional planned graphics/report dependencies with pip install -r requirements.txt. Run tests with python -m pytest (not yet executed).
+Current scaffold wraps legacy calculations, isolates batch errors, exports JSON and displays inference warnings. It deliberately returns no recommended alternatives until independent verification. Direct HY-8 GUI import, independent jet decay, new scour methods, graphics/orbit and PDF export remain pending.
+Jurisdiction: relevant FHWA HEC methods accepted by project owner for SCDOT use; this is not independently confirmed agency adoption. Other jurisdictional methods must be labeled not SCDOT confirmed.
+Inferences: I01 ranking is engineering judgment; I02 conceptual 3D surfaces are illustrative; I03 inherited construction details are project-specific; I04 interpolation of HY-8 velocities is not independent jet prediction. See docs/VERIFICATION.md. Public repository: never commit confidential project inputs.
