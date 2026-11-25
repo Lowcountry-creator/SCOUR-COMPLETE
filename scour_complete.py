@@ -1,5 +1,6 @@
 """Development framework. Legacy outputs are NOT verified design recommendations."""
 from basin_exit import basin_exit
+from scdot_stone import GRADATIONS, reach_class
 
 import argparse
 import json
@@ -82,6 +83,9 @@ def run_case(data):
     result = analyze(inp)
     # HEC-14 (2006) 10.1.4 gives alternative thickness bases. Reporting
     # the larger as a conservative screen is engineering judgment.
+    if dmax is None:
+        dmax = next((upper for _, median, upper in GRADATIONS
+                     if median == inp.D50_trial), None)
     thickness = None
     if result.basin_applies == "Yes" and dmax is not None:
         if dmax < inp.D50_trial:
@@ -128,10 +132,13 @@ def run_case(data):
             f"{name}: D50 basis {v['d50_basis_ft']:.2f} ft, Dmax basis "
             f"{v['dmax_basis_ft']:.2f} ft, use {v['screen_ft']:.2f} ft"
             for name, v in thickness.items())
-    report = "\n".join([STATUS, *INFERENCES, thickness_note, format_report(inp, result), STATUS])
+    reach_classes = [reach_class(r.D50_required, inp.min_class) for r in result.reaches]
+    class_note = "SCDOT 2025 §804.2.1 reach classes (minimum applied): " + (
+        ", ".join(reach_classes) or "not evaluated")
+    report = "\n".join([STATUS, *INFERENCES, class_note, thickness_note, format_report(inp, result), STATUS])
     return {"status": STATUS, "inputs": asdict(inp), "legacy": legacy,
             "legacy_unverified_design_text": summary,
-            "trial_dmax_ft": dmax, "thickness": thickness, "basin_side_slope": side_slope, "basin_exit": exit_check, "report": report, "recommendations": [],
+            "reach_classes_2025": reach_classes, "trial_dmax_ft": dmax, "thickness": thickness, "basin_side_slope": side_slope, "basin_exit": exit_check, "report": report, "recommendations": [],
             "inferences": INFERENCES,
             "blockers": ["Independent equation and applicability verification pending",
                          "Independent jet decay not implemented"]}

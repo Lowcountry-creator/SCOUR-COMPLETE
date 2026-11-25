@@ -120,3 +120,9 @@ def test_low_tailwater_exit():
     assert case["basin_exit"]["passes"]
     assert case["legacy"]["reaches"] == []
     assert "Step 5" in case["legacy_unverified_design_text"]["option_2"]
+
+
+def test_2025_classes():
+    case = run_case(base(Vo=20, Q=20*14*2.8, HS_hy8=None))
+    assert case["reach_classes_2025"][0] == "F"
+    assert case["trial_dmax_ft"] == 1.33
