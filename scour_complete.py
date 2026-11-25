@@ -12,6 +12,7 @@ from legacy.hec14_outlet_protection import Inputs, analyze, flow_area, format_re
 
 STATUS = "DEVELOPMENT ONLY — independent engineering verification pending"
 INFERENCES = [
+    'Basin length uses separate pool and apron minimum lengths. The mild-slope 0.65 ft trial gives 25.1 ft here versus 24 ft in the FHWA example.',
     'I18: Legacy jet screening uses TW/ye. Step 5 also uses TW/yo; verify applicability where the two classifications differ.',
     'I07-I12: Station interval is 4 Wo without a valid basin. Target is max(channel, permissible); interpolate linearly, apply a one-LB minimum, round up to 6 ft and size each reach at its upstream velocity. These length rules are engineering judgment.',
     'I15: Block 9 uses a fixed Shields coefficient for bed screening only. Reynolds-dependent HEC-15 sizing and bank checks are pending.',

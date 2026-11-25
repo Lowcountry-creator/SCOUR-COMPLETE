@@ -242,3 +242,7 @@ def test_width_provenance():
     case = run_case(d)
     assert d["Wo"] == case["supplied_width_ft"] == 0
     assert case["inputs"]["Wo"] == 4
+
+
+def test_length_deviation_documented():
+    assert "25.1 ft" in run_case(base())["report"]
