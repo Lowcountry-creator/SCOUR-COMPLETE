@@ -72,6 +72,7 @@ def run_case(data):
         raise ValueError("V_LB requires four supplied HY-8 station velocities")
     if inp.barrels != 1:
         raise ValueError("barrels must be one for framework screening; multiple outlets are unverified")
+    supplied_width = inp.Wo
     inp.validate()
     if inp.yo > inp.rise - inp.embedment:
         raise ValueError("yo exceeds hydraulic rise above the outlet bed")
@@ -135,7 +136,7 @@ def run_case(data):
     class_note = "SCDOT 2025 §804.2.1 reach classes (minimum applied): " + (
         ", ".join(reach_classes) or "not evaluated")
     report = "\n".join([STATUS, *INFERENCES, class_note, thickness_note, format_report(inp, result), STATUS])
-    return {"status": STATUS, "inputs": asdict(inp), "legacy": legacy,
+    return {"status": STATUS, "inputs": asdict(inp), "supplied_width_ft": supplied_width, "legacy": legacy,
             "legacy_unverified_design_text": summary,
             "reach_classes_2025": reach_classes, "trial_dmax_ft": dmax, "thickness": thickness, "basin_side_slope": side_slope, "basin_exit": exit_check, "report": report, "recommendations": [],
             "inferences": INFERENCES,

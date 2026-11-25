@@ -232,3 +232,13 @@ def test_published_steep_basin():
     assert r["hs"] == pytest.approx(6.0, abs=.06)
     assert r["Lb"] == pytest.approx(90, abs=1)
     assert r["Wb"] == pytest.approx(68, abs=.6)
+
+
+def test_width_provenance():
+    import math
+
+    d = base(shape="circular", rise=4, Wo=0, embedment=0, Q=60, yo=2,
+             Vo=60/(2*math.pi), V_LB=[8, 6, 4, 2], HS_hy8=None)
+    case = run_case(d)
+    assert d["Wo"] == case["supplied_width_ft"] == 0
+    assert case["inputs"]["Wo"] == 4
