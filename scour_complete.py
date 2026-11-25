@@ -13,6 +13,7 @@ from hec14_outlet_protection import Inputs, analyze, flow_area, format_report
 
 STATUS = "DEVELOPMENT ONLY — independent engineering verification pending"
 INFERENCES = [
+    'I13: Option 1 extends basin and apron relationships to a lined channel by engineering judgment.',
     'I14: Confirm the supplied permissible velocity and shear against site cover, soil, slope and applicable table row.',
     'I21: Full-barrel outlet results are screening only. Brink velocity tolerance is 0.1 fps.',
     'I05: Equivalent single-outlet geometry is a screening assumption. Multiple-barrel jet interaction is UNVERIFIED.',
@@ -88,6 +89,10 @@ def run_case(data):
                                else "Trial basin rejected. " + detail)
     elif result.option_2.startswith("Available"):
         result.option_2 = "Incomplete: rerun candidate stone and check basin exit."
+    if result.Fr >= 1:
+        result.option_1 = "I13: Withheld for supercritical or critical outlet flow."
+    else:
+        result.option_1 = "I13: Engineering judgment. " + result.option_1
     legacy = asdict(result)
     summary = {key: legacy.pop(key) for key in
                ("option_1", "option_2", "vertical_limits", "banks")}

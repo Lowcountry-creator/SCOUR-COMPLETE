@@ -79,3 +79,9 @@ def test_permissible_required(field):
 def test_field_validation(change, field):
     with pytest.raises(ValueError, match=field):
         run_case(base(**change))
+
+
+def test_option_one_eligibility():
+    assert "Withheld" in run_case(base())["legacy_unverified_design_text"]["option_1"]
+    sub = run_case(asdict(EXAMPLES["culv2"]))
+    assert "Engineering judgment" in sub["legacy_unverified_design_text"]["option_1"]
