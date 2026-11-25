@@ -99,3 +99,7 @@ def test_option_two_uses_trial_class():
 
 def test_ratio_attribution():
     assert "HY-8 screening limit" in run_case(base())["report"]
+
+
+def test_shields_screen_identified():
+    assert "bed screening only" in run_case(base())["report"]
