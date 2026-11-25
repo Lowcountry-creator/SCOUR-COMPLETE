@@ -41,3 +41,12 @@ def test_step4_published_exit():
     assert "Incomplete" in run_case(base())["legacy_unverified_design_text"]["option_2"]
     rejected = run_case(base(basin_side_slope=0, V_channel=1))
     assert "rejected" in rejected["legacy_unverified_design_text"]["option_2"]
+
+
+def test_relief_pipe_datum():
+    from pathlib import Path
+    from legacy.hy8_io import inputs_from_hy8
+
+    path = Path(__file__).resolve().parents[1] / "legacy/examples/HY8_Demo_Culverts.hy8"
+    with pytest.warns(UserWarning, match="bed 100.7"):
+        assert inputs_from_hy8(path, 0, 1, 3).TW == pytest.approx(2.75)

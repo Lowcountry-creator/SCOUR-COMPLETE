@@ -439,6 +439,34 @@ def inputs_from_hy8(hy8_path: Union[str, Path],
             raise ValueError(f"{prefix} is blank for flow column {i}")
         return v
 
+    # UNVERIFIED for production HY-8 files. Use a matching elevation in feet,
+    # never infer the elevation datum from the summary depth alone.
+    if "TW" in overrides:
+        outlet_tw = overrides["TW"]
+    else:
+        elevations = []
+        for other in rst_xing.tables:
+            if other.culvert_index != table.culvert_index or other.unit("Tailwater Elevation") != "ft":
+                continue
+            if other.unit("Total Discharge") != "cfs" or other.row("Total Discharge") != table.row("Total Discharge"):
+                continue
+            values = other.row("Tailwater Elevation")
+            if i < len(values) and values[i] is not None:
+                elevations.append(values[i])
+        if len(set(elevations)) != 1 or culv.outlet_invert_ft is None:
+            raise ValueError("Confirm outlet-relative TW in ft: missing or ambiguous elevation datum")
+        bed = culv.outlet_invert_ft + overrides.get("embedment", culv.embed_depth_ft)
+        outlet_tw = max(0.0, elevations[0] - bed)
+        reported = val("Tailwater Depth")
+        # 0.01 ft is the precision of the fixture's printed elevations.
+        if abs(outlet_tw - reported) <= 0.0100001:
+            outlet_tw = reported
+        else:
+            import warnings
+            warnings.warn(f"Summary TW {reported:g} ft differs from outlet-relative TW "
+                          f"{outlet_tw:g} ft (WSE {elevations[0]:g}, bed {bed:g} ft).",
+                          UserWarning, stacklevel=2)
+
     span = culv.span_ft
     data = dict(
         project=project.title,
@@ -453,7 +481,7 @@ def inputs_from_hy8(hy8_path: Union[str, Path],
         Q=val("Culvert Discharge"),
         yo=val("Outlet Depth"),
         Vo=val("Outlet Velocity"),
-        TW=val("Tailwater Depth"),
+        TW=outlet_tw,
         V_channel=val("Tailwater Velocity"),
         Wo=culv.barrels * span,
         rise=culv.rise_ft,
