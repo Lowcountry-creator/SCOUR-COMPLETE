@@ -317,3 +317,13 @@ def test_governing_events(tmp_path):
     rows = export_batch([small, run_case(base())], tmp_path)
     assert [r["governs_length_ft"] for r in rows] == [False, True]
     assert rows[1]["governs_max_reach_d50_ft"]
+
+
+@pytest.mark.parametrize("field", ["TW", "V_channel"])
+def test_legacy_missing_tw_or_velocity(field):
+    from legacy.hec14_outlet_protection import Inputs, analyze
+
+    data = base()
+    del data[field]
+    with pytest.raises(ValueError, match=field):
+        analyze(Inputs(**data))

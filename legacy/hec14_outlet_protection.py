@@ -97,8 +97,8 @@ class Inputs:
     Q: float = 0.0  # Design discharge, cfs
     yo: float = 0.0  # Brink (outlet) depth, ft
     Vo: float = 0.0  # Brink velocity, fps
-    TW: float = 0.0  # Tailwater depth above embedded bed, ft
-    V_channel: float = 0.0  # Tailwater (channel) velocity, fps
+    TW: Optional[float] = None  # Tailwater depth above embedded bed, ft
+    V_channel: Optional[float] = None  # Tailwater (channel) velocity, fps
 
     # Plans.
     shape: str = "box"  # "box" (rectangular) or "circular"
@@ -143,6 +143,9 @@ class Inputs:
         for name in positives:
             if getattr(self, name) <= 0:
                 raise ValueError(f"{name} must be > 0")
+        for field_name in ("TW", "V_channel"):
+            if getattr(self, field_name) is None:
+                raise ValueError(f"{field_name} must be supplied explicitly")
         if self.TW < 0 or self.embedment < 0:
             raise ValueError("TW and embedment must be >= 0")
         if self.embedment >= self.rise:
