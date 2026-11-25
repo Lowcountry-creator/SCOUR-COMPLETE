@@ -5,12 +5,10 @@ from scdot_stone import GRADATIONS, reach_class
 import argparse
 import json
 import math
-import sys
 from pathlib import Path
 from dataclasses import asdict
 
-sys.path.insert(0, str(Path(__file__).resolve().parent / "legacy"))
-from hec14_outlet_protection import Inputs, analyze, flow_area, format_report
+from legacy.hec14_outlet_protection import Inputs, analyze, flow_area, format_report
 
 STATUS = "DEVELOPMENT ONLY — independent engineering verification pending"
 INFERENCES = [

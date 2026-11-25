@@ -202,3 +202,14 @@ def test_batch_strict_json(bad):
     entries = json.loads(json.dumps(run_batch([base(Q=bad), base()]), allow_nan=False))
     assert entries[0]["index"] == 0 and "Q" in entries[0]["error"]
     assert entries[1]["legacy"]["L_adopted"] == 108
+
+
+def test_import_path_unchanged():
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    subprocess.run([sys.executable, "-c",
+                    "import sys; before=list(sys.path); import scour_complete; "
+                    "assert sys.path == before"], check=True,
+                   cwd=Path(__file__).resolve().parents[1])

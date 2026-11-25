@@ -925,7 +925,10 @@ def _as_key(text: Union[str, int, None], allow_float: bool = False):
 
 def _inputs_from_hy8_args(a: argparse.Namespace) -> Inputs:
     """Assemble Inputs from --hy8 and friends."""
-    import hy8_io  # local module, imported here to keep the core standalone
+    if __package__:
+        from . import hy8_io
+    else:
+        import hy8_io
 
     overrides: Dict = {}
     if a.v_lb is not None:

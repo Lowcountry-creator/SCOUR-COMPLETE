@@ -27,7 +27,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Union
 
-from hec14_outlet_protection import Inputs
+if __package__:
+    from .hec14_outlet_protection import Inputs
+else:  # Standalone legacy CLI
+    from hec14_outlet_protection import Inputs
 
 # HY-8 8.x ShapeDB order. Project files store a one-based index.
 SHAPE_NAMES = (
