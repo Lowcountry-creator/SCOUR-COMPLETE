@@ -413,6 +413,10 @@ def inputs_from_hy8(hy8_path: Union[str, Path],
             "writes the results file, or pass rst_path.")
 
     project = read_hy8(hy8_path)
+    # Only the synthetic English-unit convention has been exercised.
+    # UNVERIFIED: production HY-8 embedment units and SLRIPRAP card.
+    if project.units_flag != 0:
+        raise ValueError("Unsupported or missing HY-8 units flag; English units required")
     xing = project.crossing(crossing)
     culv = _pick(xing.culverts, culvert, "culvert")
     shape = SHAPE_TO_INPUT.get(culv.shape)
@@ -424,9 +428,11 @@ def inputs_from_hy8(hy8_path: Union[str, Path],
     rst_xing = _pick_rst_crossing(results, xing)
     table = rst_xing.culvert_summary(culv.name if isinstance(culvert, str)
                                      else culvert)
-    for prefix, want in (("Outlet Depth", "ft"), ("Outlet Velocity", "ft/s")):
+    for prefix, want in (("Outlet Depth", "ft"), ("Outlet Velocity", "ft/s"),
+                         ("Total Discharge", "cfs"), ("Culvert Discharge", "cfs"),
+                         ("Tailwater Depth", "ft"), ("Tailwater Velocity", "ft/s")):
         unit = table.unit(prefix)
-        if unit and unit != want:
+        if unit != want:
             raise ValueError(f"{prefix} is in {unit}; expected {want}. Run "
                              "HY-8 in English units.")
 

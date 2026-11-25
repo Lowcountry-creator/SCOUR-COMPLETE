@@ -149,3 +149,14 @@ def test_pdf_includes_report(tmp_path):
     text = "\n".join(getattr(item, "text", "") for item in build.call_args.args[0])
     assert case["inputs"]["culvert"] in text and "10. Design summary" in text
     assert "hs: 1.82 ft" in text
+
+
+def test_wrong_import_units(tmp_path):
+    from pathlib import Path
+    from legacy.hy8_io import inputs_from_hy8
+
+    src = Path(__file__).resolve().parents[1] / "legacy/examples/HY8_Demo_Culverts.hy8"
+    changed = tmp_path / src.name
+    changed.write_text(src.read_text().replace("UNITS                0", "UNITS                1"))
+    with pytest.raises(ValueError, match="units flag"):
+        inputs_from_hy8(changed, 0, 0, 3, rst_path=src.with_suffix(".rst"))
