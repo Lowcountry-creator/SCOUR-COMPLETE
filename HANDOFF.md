@@ -6,3 +6,6 @@ Next: read docs/ARCHITECTURE.md and docs/VERIFICATION.md. Verify primary FHWA eq
 
 ## M1a — runnable scaffold authored (2026-11-25)
 Commit f0e76fe918b9fffac1bc5a3428f4ceb6f0bb9ff9 contains CLI wrapper, Tkinter JSON/batch shell and two scaffold tests. README updated. Tests and GUI not executed; inspect legacy test imports and run python -m pytest first. No recommendations emitted by design. Next milestone M2: primary-source equation verification, especially HEC-14 jet decay, then implement verified methods. Graphics/PDF/3D and direct HY-8 GUI import are planned only. Do not claim implemented. Preserve legacy format and record all changes.
+
+## M2 partial — 2026-11-25
+Added docs/M2_BENCHMARKS.md, methods_apron.py and tests/test_m2_benchmarks.py. Official FHWA apron example located; restricted stone sizing implementation authored, tests not executed. Culverts 1 and 2 are required regression cases. Optional calculated detail sheet separate from existing report format; actual HY-8 Exporter template parity pending inspection. Jet decay requires Figure 10.3 inspection and digitization, not arbitrary equation. Next: execute tests, verify source figure and chapter 5, resolve existing QC, then integrate methods. M2 NOT complete.
