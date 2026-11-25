@@ -179,6 +179,8 @@ def run_case(data):
         exit_note = (f"Basin exit critical depth {exit_check['depth_ft']:.2f} ft; "
                      f"velocity {exit_check['velocity_fps']:.2f} fps; allowable "
                      f"{exit_check['allowable_fps']:.2f} fps.")
+    # Preserve the ten legacy blocks, identifying the historical A-D table.
+    class_note += ". The following workbook blocks retain their A-D class labels."
     report = "\n".join([STATUS, *INFERENCES, exit_note, soil_screen, lining_note, class_note, thickness_note, format_report(inp, result), STATUS])
     return {"status": STATUS, "soil_k": soil_k, "soil_screen": soil_screen, "lining_basis": lining_basis, "inputs": asdict(inp), "supplied_width_ft": supplied_width, "legacy": legacy,
             "legacy_unverified_design_text": summary,
