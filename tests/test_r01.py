@@ -395,3 +395,10 @@ def test_legacy_import_discloses_lining_defaults(capsys):
     path = Path(__file__).resolve().parents[1] / "legacy/examples/HY8_Demo_Culverts.hy8"
     main(["--hy8", str(path), "--v-lb", "4", "3", "2", "1"])
     assert "tau_perm" in capsys.readouterr().err
+
+
+def test_migration_reference():
+    from pathlib import Path
+
+    path = Path(__file__).resolve().parents[1] / "HANDOFF.md"
+    assert "e0cf993 is a commit (tree a6d743a)" in path.read_text(encoding="utf-8")
