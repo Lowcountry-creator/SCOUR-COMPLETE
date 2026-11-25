@@ -95,3 +95,7 @@ def test_option_two_uses_trial_class():
     assert r.option_2.startswith("Class A basin: pool 4.0 ft deep")
     assert (r.Ls, r.La, r.Wb) == pytest.approx((42, 19.8, 55.2), abs=.3)
     assert (r.t_approach, r.t_pool) == (1.5, 1)
+
+
+def test_ratio_attribution():
+    assert "HY-8 screening limit" in run_case(base())["report"]

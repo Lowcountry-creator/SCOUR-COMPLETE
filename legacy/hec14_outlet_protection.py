@@ -60,7 +60,7 @@ NONE_OF_A_TO_D = "None of A to D"
 
 # Riprap basin equation limits, HEC-14 Sec 10.1.5 Step 2.
 D50_YE_MIN = 0.1
-D50_YE_MAX = 0.7
+D50_YE_MAX = 0.7  # HY-8 screening range, not a HEC-14 Step 2 upper bound.
 HS_D50_MIN = 2.0
 
 # Tailwater threshold for the high tailwater procedure, HEC-14 Sec 10.1.3.
@@ -550,8 +550,8 @@ def analyze(inp: Inputs) -> Results:
         r.trial_result = ("Shallow pool, hs/D50 below 2. Use a smaller class "
                           "for a basin or a larger class for no pool.")
     else:
-        r.trial_result = ("D50/ye is outside 0.1 to 0.7. Eq. 10.1 does not "
-                          "apply to this stone. Change the trial D50.")
+        r.trial_result = ("D50/ye is outside the HY-8 screen of 0.1 to 0.7. Do not "
+                          "use this trial. Change the trial D50.")
 
     # Largest class with a valid basin: walk D, C, B, A.
     r.largest_valid_class = NONE_OF_A_TO_D
