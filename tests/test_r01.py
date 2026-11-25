@@ -289,3 +289,11 @@ def test_low_tailwater_regime():
 def test_station_tie_failure():
     with pytest.raises(ValueError, match="station spacing"):
         run_case(base(D50_trial=.5))
+
+
+def test_lining_provenance():
+    basis = {"cover": "surveyed grass", "soil_group": "D", "source_row": "project criterion"}
+    case = run_case(base(lining_basis=basis))
+    assert case["lining_basis"] == basis and "project criterion" in case["report"]
+    with pytest.raises(ValueError, match="slope"):
+        run_case(base(lining_basis=basis, slope=None))

@@ -60,8 +60,18 @@ def run_case(data):
     """Preserve original ten-block output; do not promote unverified methods."""
     if not isinstance(data, dict):
         raise ValueError("Case must be a JSON object")
-    validate_fields(data)
     data = dict(data)
+    lining_basis = data.pop("lining_basis", None)
+    if lining_basis is not None:
+        if not isinstance(lining_basis, dict):
+            raise ValueError("lining_basis requires cover, soil_group and source_row")
+        for key in ("cover", "soil_group", "source_row"):
+            if not isinstance(lining_basis.get(key), str) or not lining_basis[key].strip():
+                raise ValueError(f"lining_basis requires {key}")
+        if data.get("slope") is None:
+            raise ValueError("slope required with lining_basis")
+        lining_basis = {key: lining_basis[key] for key in ("cover", "soil_group", "source_row")}
+    validate_fields(data)
     dmax = data.pop("trial_dmax_ft", None)
     side_slope = data.pop("basin_side_slope", None)
     for field in ("V_perm", "tau_perm", "TW", "V_channel", "shape", "barrels",
@@ -139,8 +149,14 @@ def run_case(data):
     reach_classes = [reach_class(r.D50_required, inp.min_class) for r in result.reaches]
     class_note = "SCDOT 2025 §804.2.1 reach classes (minimum applied): " + (
         ", ".join(reach_classes) or "not evaluated")
-    report = "\n".join([STATUS, *INFERENCES, class_note, thickness_note, format_report(inp, result), STATUS])
-    return {"status": STATUS, "inputs": asdict(inp), "supplied_width_ft": supplied_width, "legacy": legacy,
+    if lining_basis:
+        lining_note = "Permissible threshold basis: " + ", ".join(
+            f"{key}={value}" for key, value in lining_basis.items())
+    else:
+        lining_note = ("UNVERIFIED permissible thresholds: supply lining_basis "
+                       "(cover, soil_group, source_row) and slope for traceability.")
+    report = "\n".join([STATUS, *INFERENCES, lining_note, class_note, thickness_note, format_report(inp, result), STATUS])
+    return {"status": STATUS, "lining_basis": lining_basis, "inputs": asdict(inp), "supplied_width_ft": supplied_width, "legacy": legacy,
             "legacy_unverified_design_text": summary,
             "reach_classes_2025": reach_classes, "trial_dmax_ft": dmax, "thickness": thickness, "basin_side_slope": side_slope, "basin_exit": exit_check, "report": report, "recommendations": [],
             "inferences": INFERENCES,
