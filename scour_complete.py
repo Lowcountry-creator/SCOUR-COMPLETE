@@ -1,4 +1,6 @@
 """Development framework. Legacy outputs are NOT verified design recommendations."""
+from basin_exit import basin_exit
+
 import argparse
 import json
 import sys
@@ -18,17 +20,33 @@ INFERENCES = [
 
 def run_case(data):
     """Preserve original ten-block output; do not promote unverified methods."""
+    data = dict(data)
+    side_slope = data.pop("basin_side_slope", None)
     inp = Inputs.from_dict(data)
     if not data.get("V_LB") or not any(data["V_LB"]):
         raise ValueError("V_LB requires four supplied HY-8 station velocities")
     result = analyze(inp)
+    exit_check = None
+    if result.basin_applies == "Yes":
+        if side_slope is None:
+            result.option_2 = "Incomplete: supply basin_side_slope (H:V) for exit check."
+        else:
+            exit_check = basin_exit(inp.Q, result.Wb, side_slope, inp.g,
+                                    max(inp.V_channel, inp.V_perm))
+            outcome = "passes" if exit_check["passes"] else "fails"
+            detail = (f"Trial basin exit {outcome}: {exit_check['velocity_fps']:.2f} fps "
+                      f"vs {exit_check['allowable_fps']:.2f} fps allowable.")
+            result.option_2 = (result.option_2 + " " + detail if exit_check["passes"]
+                               else "Trial basin rejected. " + detail)
+    elif result.option_2.startswith("Available"):
+        result.option_2 = "Incomplete: rerun candidate stone and check basin exit."
     legacy = asdict(result)
     summary = {key: legacy.pop(key) for key in
                ("option_1", "option_2", "vertical_limits", "banks")}
     report = "\n".join([STATUS, *INFERENCES, format_report(inp, result), STATUS])
     return {"status": STATUS, "inputs": asdict(inp), "legacy": legacy,
             "legacy_unverified_design_text": summary,
-            "report": report, "recommendations": [],
+            "basin_side_slope": side_slope, "basin_exit": exit_check, "report": report, "recommendations": [],
             "inferences": INFERENCES,
             "blockers": ["Independent equation and applicability verification pending",
                          "Independent jet decay not implemented"]}
