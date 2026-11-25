@@ -327,3 +327,10 @@ def test_legacy_missing_tw_or_velocity(field):
     del data[field]
     with pytest.raises(ValueError, match=field):
         analyze(Inputs(**data))
+
+
+def test_legacy_zero_stations():
+    from legacy.hec14_outlet_protection import Inputs, analyze
+
+    with pytest.raises(ValueError, match="V_LB"):
+        analyze(Inputs(**base(V_LB=[0]*4)))

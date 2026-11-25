@@ -154,6 +154,8 @@ class Inputs:
             raise ValueError("Ss must be > 1")
         if self.min_class not in CLASS_NAMES:
             raise ValueError(f"min_class must be one of {CLASS_NAMES}")
+        if not any(self.V_LB):
+            raise ValueError("V_LB requires actual station velocities; all four are zero")
         if len(self.V_LB) != 4:
             raise ValueError("V_LB needs four velocities (1 to 4 LB)")
         if self.slope is not None and self.slope < 0:
@@ -1028,6 +1030,9 @@ def main(argv: Optional[List[str]] = None) -> int:
         with open(a.inputs_out, "w", encoding="utf-8") as fh:
             json.dump(asdict(inp), fh, indent=2)
 
+    if not any(inp.V_LB):
+        print("V_LB unavailable; calculation and design summary withheld.", file=sys.stderr)
+        return 2
     r = analyze(inp)
     report = format_report(inp, r)
     if a.out:

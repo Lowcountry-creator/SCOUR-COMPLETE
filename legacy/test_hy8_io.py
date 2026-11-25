@@ -90,7 +90,7 @@ def test_inputs_from_hy8_selectors():
 
 
 def test_inputs_from_hy8_circular_multi_barrel():
-    inp = hy8_io.inputs_from_hy8(HY8, "Farm Access Lane", 0, "25-yr")
+    inp = hy8_io.inputs_from_hy8(HY8, "Farm Access Lane", 0, "25-yr", V_LB=[4, 3, 2, 1])
     assert inp.shape == "circular"
     assert inp.barrels == 3
     assert inp.rise == 3
