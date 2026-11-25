@@ -213,3 +213,22 @@ def test_import_path_unchanged():
                     "import sys; before=list(sys.path); import scour_complete; "
                     "assert sys.path == before"], check=True,
                    cwd=Path(__file__).resolve().parents[1])
+
+
+@pytest.mark.parametrize("name,length,pool", [
+    ("culv1", 108, 1.8213), ("culv2", 60, None), ("culv4", 108, None)])
+def test_workbook_regression(name, length, pool):
+    r = run_case(asdict(EXAMPLES[name]))["legacy"]
+    assert r["L_adopted"] == length
+    if pool is None:
+        assert r["hs"] is None
+    else:
+        assert r["hs"] == pytest.approx(pool, abs=.0001)
+
+
+def test_published_steep_basin():
+    r = run_case(base(Q=800, Wo=8, rise=6, embedment=0, yo=4, Vo=25, TW=2.8,
+                      D50_trial=1.83, HS_hy8=None, basin_side_slope=2))["legacy"]
+    assert r["hs"] == pytest.approx(6.0, abs=.06)
+    assert r["Lb"] == pytest.approx(90, abs=1)
+    assert r["Wb"] == pytest.approx(68, abs=.6)
