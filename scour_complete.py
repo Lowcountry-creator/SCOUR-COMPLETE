@@ -13,6 +13,7 @@ from hec14_outlet_protection import Inputs, analyze, flow_area, format_report
 
 STATUS = "DEVELOPMENT ONLY — independent engineering verification pending"
 INFERENCES = [
+    'I18: Legacy jet screening uses TW/ye. Step 5 also uses TW/yo; verify applicability where the two classifications differ.',
     'I07-I12: Station interval is 4 Wo without a valid basin. Target is max(channel, permissible); interpolate linearly, apply a one-LB minimum, round up to 6 ft and size each reach at its upstream velocity. These length rules are engineering judgment.',
     'I15: Block 9 uses a fixed Shields coefficient for bed screening only. Reynolds-dependent HEC-15 sizing and bank checks are pending.',
     'I06: The upper D50/ye limit of 0.7 is the HY-8 screening limit.',
@@ -108,6 +109,16 @@ def run_case(data):
         result.option_1 = "I13: Withheld for supercritical or critical outlet flow."
     else:
         result.option_1 = "I13: Engineering judgment. " + result.option_1
+    if result.TW_ye <= 0.75:
+        result.decay_L = []
+        result.decay_V = []
+        result.decay_ratio = []
+        result.reaches = []
+        result.headwall_class_lined = "Not evaluated at low tailwater"
+        result.option_1 = "Low tailwater: downstream jet sizing withheld."
+        if exit_check and exit_check["passes"] and inp.TW / inp.yo <= 0.75:
+            result.option_2 = ("Trial basin exit passes. No additional downstream "
+                               "riprap indicated by Step 5 for this basin.")
     legacy = asdict(result)
     summary = {key: legacy.pop(key) for key in
                ("option_1", "option_2", "vertical_limits", "banks")}

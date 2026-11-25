@@ -113,3 +113,10 @@ def test_dmax_thickness():
 
 def test_length_judgments_reported():
     assert "I07-I12" in run_case(base())["report"]
+
+
+def test_low_tailwater_exit():
+    case = run_case(base(TW=.5, HS_hy8=None, basin_side_slope=2, V_perm=20))
+    assert case["basin_exit"]["passes"]
+    assert case["legacy"]["reaches"] == []
+    assert "Step 5" in case["legacy_unverified_design_text"]["option_2"]
