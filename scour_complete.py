@@ -65,9 +65,10 @@ def run_case(data):
     data = dict(data)
     dmax = data.pop("trial_dmax_ft", None)
     side_slope = data.pop("basin_side_slope", None)
-    for field in ("V_perm", "tau_perm"):
+    for field in ("V_perm", "tau_perm", "TW", "V_channel", "shape", "barrels",
+                  "embedment", "D50_trial", "Ss", "min_class"):
         if field not in data:
-            raise ValueError(f"{field} must be explicitly supplied for the receiving lining")
+            raise ValueError(f"{field} must be explicitly supplied")
     inp = Inputs.from_dict(data)
     if not data.get("V_LB") or not any(data["V_LB"]):
         raise ValueError("V_LB requires four supplied HY-8 station velocities")

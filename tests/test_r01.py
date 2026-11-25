@@ -183,3 +183,12 @@ def test_adjusted_diameter_ambiguity():
     with pytest.raises(ValueError, match="D versus"):
         apron_d50(85, 5, 4.5, supercritical=True, normal_depth=3)
     assert "Stone size only" in apron_d50(85, 5, 2)["scope"]
+
+
+@pytest.mark.parametrize("field", ["TW", "V_channel", "Ss", "embedment", "barrels"])
+def test_explicit_hydraulic_inputs(field):
+    data = base()
+    del data[field]
+    with pytest.raises(ValueError, match=field):
+        run_case(data)
+    assert run_case(base(TW=0, HS_hy8=None))["legacy"]["tailwater_case"] == "Low tailwater"
