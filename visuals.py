@@ -7,8 +7,12 @@ def export_velocity_plot(case, path):
     import matplotlib.pyplot as plt
     inp, result = case["inputs"], case["legacy"]
     fig, ax = plt.subplots(figsize=(8, 4))
-    ax.plot([0] + result["decay_L"], [inp["Vo"]] + result["decay_V"],
-            "o-", label="Supplied HY-8 velocities (not independent prediction)")
+    if result["TW_ye"] > 0.75 and any(result["decay_V"]):
+        ax.plot([0] + result["decay_L"], [inp["Vo"]] + result["decay_V"],
+                "o-", label="Supplied HY-8 velocities (not independent prediction)")
+    else:
+        ax.text(.5, .9, "Downstream jet series unavailable", transform=ax.transAxes,
+                ha="center")
     ax.axhline(inp["V_channel"], linestyle="--", label="Ambient channel")
     ax.axhline(inp["V_perm"], linestyle=":", label="Permissible velocity")
     ax.set(xlabel="Distance downstream (ft)", ylabel="Velocity (fps)",

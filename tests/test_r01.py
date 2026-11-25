@@ -246,3 +246,13 @@ def test_width_provenance():
 
 def test_length_deviation_documented():
     assert "25.1 ft" in run_case(base())["report"]
+
+
+def test_low_tailwater_velocity_label(tmp_path):
+    from unittest.mock import patch
+    from matplotlib.axes import Axes
+    from visuals import export_velocity_plot
+
+    with patch.object(Axes, "plot", autospec=True) as plot:
+        export_velocity_plot(run_case(base(TW=0, HS_hy8=None)), tmp_path / "plot.png")
+    assert not plot.called
