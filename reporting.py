@@ -44,8 +44,11 @@ def export_batch(results, folder, **options):
     for i, case in enumerate(results):
         row = {"index": i, "status": case.get("status"), "error": case.get("error", "")}
         inputs = case.get("inputs", {})
-        row.update(culvert=inputs.get("culvert"), event=inputs.get("design_storm"),
+        row.update(project=inputs.get("project"), culvert=inputs.get("culvert"), event=inputs.get("design_storm"),
                    length_ft=case.get("legacy", {}).get("L_adopted"),
+                   max_reach_d50_ft=max((r["D50_required"] for r in
+                                        case.get("legacy", {}).get("reaches", [])
+                                        if r["within_protection"] == "Yes"), default=None),
                    orbit="skipped")
         if not row["error"]:
             try:
@@ -61,8 +64,20 @@ def export_batch(results, folder, **options):
             except Exception as exc:
                 row["error"] = str(exc)
         summary.append(row)
+    for metric in ("length_ft", "max_reach_d50_ft"):
+        maxima = {}
+        for row in summary:
+            key = (row["project"], row["culvert"])
+            value = row[metric]
+            if row["culvert"] and isinstance(value, (int, float)):
+                maxima[key] = max(maxima.get(key, value), value)
+        for row in summary:
+            key = (row["project"], row["culvert"])
+            row["governs_" + metric] = key in maxima and row[metric] == maxima[key]
     with (folder / "summary.csv").open("w", newline="", encoding="utf-8") as stream:
-        writer = csv.DictWriter(stream, fieldnames=["index", "culvert", "event", "length_ft", "status", "orbit", "error"])
+        writer = csv.DictWriter(stream, fieldnames=["index", "project", "culvert", "event", "length_ft", "max_reach_d50_ft",
+                                                       "governs_length_ft", "governs_max_reach_d50_ft",
+                                                       "status", "orbit", "error"])
         writer.writeheader()
         writer.writerows(summary)
     return summary

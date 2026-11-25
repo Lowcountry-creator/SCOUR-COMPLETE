@@ -307,3 +307,13 @@ def test_published_apron_dimensions():
     assert (apron["length_ft"], apron["thickness_ft"]) == (20, 1.65)
     assert apron["end_width_ft"] == pytest.approx(28.3, abs=.05)
     assert apron_screen(85, 5, 1.6, 2.7)["d50_ft"] < apron["d50_ft"]
+
+
+def test_governing_events(tmp_path):
+    from reporting import export_batch
+
+    small = run_case(asdict(EXAMPLES["culv2"]))
+    small["inputs"]["culvert"] = base()["culvert"]
+    rows = export_batch([small, run_case(base())], tmp_path)
+    assert [r["governs_length_ft"] for r in rows] == [False, True]
+    assert rows[1]["governs_max_reach_d50_ft"]
