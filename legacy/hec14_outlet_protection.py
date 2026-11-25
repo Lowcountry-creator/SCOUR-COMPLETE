@@ -748,9 +748,6 @@ def _option_1(r: Results) -> str:
 
 def _option_2(r: Results) -> str:
     """Block 10, Option 2: riprap basin (Sec 10.1)."""
-    if r.largest_valid_class == NONE_OF_A_TO_D:
-        return ("Not available. No scour pool forms with Classes A to D, so "
-                "there is no basin to build.")
     if r.trial_gives == GIVES_BASIN:
         name = next((c.label for c in r.classes if c.D50 == r.trial.D50),
                     f"Trial D50 {r.trial.D50:g} ft")
@@ -759,6 +756,9 @@ def _option_2(r: Results) -> str:
                 f"{_fmt0(r.Wb)} ft wide at the downstream end. Sec 10.3 "
                 "classes from block 8 beyond the basin to the protection "
                 "length.")
+    if r.largest_valid_class == NONE_OF_A_TO_D:
+        return ("Not available. No scour pool forms with Classes A to D, so "
+                "there is no basin to build.")
     return (f"Available with Class {r.largest_valid_class}. Set the trial "
             "D50 to that class to fill block 5.")
 

@@ -361,3 +361,13 @@ def test_low_tailwater_without_jet_data():
     case = run_case(data)
     assert case["inputs"]["V_LB"] is None
     assert case["basin_exit"]["passes"] and not case["legacy"]["decay_V"]
+
+
+def test_unlisted_trial_is_named_by_size():
+    from legacy.hec14_outlet_protection import Inputs, analyze
+
+    case = Inputs(**base(Wo=2, rise=2, embedment=0, yo=.5, Vo=7,
+                         Q=7, TW=.2, D50_trial=.1, V_LB=[4, 3, 2, 1]))
+    result = analyze(case)
+    assert result.largest_valid_class.startswith("None")
+    assert result.option_2.startswith("Trial D50 0.1 ft basin")
