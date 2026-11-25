@@ -153,13 +153,14 @@ def test_pdf_includes_report(tmp_path):
     assert "hs: 1.82 ft" in text
 
 
-def test_wrong_import_units(tmp_path):
+@pytest.mark.parametrize("flag", ["1", "invalid"])
+def test_wrong_import_units(tmp_path, flag):
     from pathlib import Path
     from legacy.hy8_io import inputs_from_hy8
 
     src = Path(__file__).resolve().parents[1] / "legacy/examples/HY8_Demo_Culverts.hy8"
     changed = tmp_path / src.name
-    changed.write_text(src.read_text().replace("UNITS                0", "UNITS                1"))
+    changed.write_text(src.read_text().replace("UNITS                0", f"UNITS                {flag}"))
     with pytest.raises(ValueError, match="units flag"):
         inputs_from_hy8(changed, 0, 0, 3, rst_path=src.with_suffix(".rst"))
 

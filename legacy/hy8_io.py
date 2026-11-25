@@ -192,7 +192,10 @@ def read_hy8(path: Union[str, Path]) -> Hy8Project:
         elif key == "STARTCULVNOTES":
             in_notes = "ENDCULVNOTES"
         elif key == "UNITS":
-            project.units_flag = int(value.strip())  # reject malformed flags
+            try:
+                project.units_flag = int(value.strip())
+            except ValueError as exc:
+                raise ValueError("Invalid HY-8 units flag") from exc
         elif key == "PROJTITLE":
             project.title = _string(value)
         elif key == "STARTCROSSING":
