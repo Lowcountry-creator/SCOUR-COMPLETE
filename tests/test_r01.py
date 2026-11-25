@@ -20,3 +20,13 @@ def test_status_on_standalone_report():
 def test_froude_gate():
     with pytest.raises(ValueError, match="Fr >= 3"):
         run_case(base(Vo=30, Q=30*14*2.8))
+
+
+@pytest.mark.parametrize("velocities", [None, [0]*4])
+def test_missing_jet(velocities):
+    data = base()
+    data.pop("V_LB")
+    if velocities is not None:
+        data["V_LB"] = velocities
+    with pytest.raises(ValueError, match="V_LB"):
+        run_case(data)

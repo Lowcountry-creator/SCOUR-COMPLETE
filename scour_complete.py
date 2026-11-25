@@ -19,6 +19,8 @@ INFERENCES = [
 def run_case(data):
     """Preserve original ten-block output; do not promote unverified methods."""
     inp = Inputs.from_dict(data)
+    if not data.get("V_LB") or not any(data["V_LB"]):
+        raise ValueError("V_LB requires four supplied HY-8 station velocities")
     result = analyze(inp)
     legacy = asdict(result)
     summary = {key: legacy.pop(key) for key in
