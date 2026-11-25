@@ -17,10 +17,16 @@ def apron_d50(q, diameter, tailwater, *, supercritical=False, normal_depth=None)
         d = (diameter + normal_depth) / 2
     if tailwater is not None and (not math.isfinite(tailwater) or tailwater < 0):
         raise ValueError("Invalid tailwater")
-    if tailwater is not None and tailwater > d:
+    if tailwater is None:
+        raise ValueError("Explicit tailwater depth in ft required")
+    # UNVERIFIED: whether the adjusted diameter governs the tailwater limits.
+    if supercritical and (tailwater < 0.4 * diameter or d < tailwater <= diameter):
+        raise ValueError("Supercritical tailwater bound depends on D versus D'; review required")
+    if tailwater > d:
         raise ValueError("High tailwater: evaluate HEC-14 section 10.3")
     tw = max(0.4 * d, tailwater or 0)
     return {"d50_ft": 0.2*d*(q/math.sqrt(32.2*d**5))**(4/3)*d/tw,
             "effective_diameter_ft": d, "tailwater_used_ft": tw,
             "reference": "HEC-14 (2006) equations 10.4–10.5",
+            "scope": "Stone size only; apron geometry not evaluated",
             "status": "Restricted calculation; integration verification pending"}

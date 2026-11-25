@@ -175,3 +175,11 @@ def test_gui_report_text():
 
     text = display_report([run_case(base()), {"index": 1, "error": "bad inputs"}])
     assert "\n10. Design summary" in text and "Case 2: bad inputs" in text
+
+
+def test_adjusted_diameter_ambiguity():
+    from methods_apron import apron_d50
+
+    with pytest.raises(ValueError, match="D versus"):
+        apron_d50(85, 5, 4.5, supercritical=True, normal_depth=3)
+    assert "Stone size only" in apron_d50(85, 5, 2)["scope"]
