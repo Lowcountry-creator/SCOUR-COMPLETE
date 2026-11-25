@@ -137,3 +137,15 @@ def test_batch_optional_orbit(tmp_path):
     assert not summary[1]["error"]
     assert (tmp_path / "plotly.min.js").exists()
     assert "../plotly.min.js" in (tmp_path / "case_0001/orbit.html").read_text()
+
+
+def test_pdf_includes_report(tmp_path):
+    from unittest.mock import patch
+    from reporting import export_case
+
+    case = run_case(base())
+    with patch("reportlab.platypus.SimpleDocTemplate.build") as build:
+        export_case(case, tmp_path, details=True)
+    text = "\n".join(getattr(item, "text", "") for item in build.call_args.args[0])
+    assert case["inputs"]["culvert"] in text and "10. Design summary" in text
+    assert "hs: 1.82 ft" in text

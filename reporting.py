@@ -20,11 +20,15 @@ def export_case(case, folder, *, details=False, orbit=False, plotlyjs=True):
              Image(str(plot), width=480, height=240)]
     for item in case["inferences"] + case["blockers"]:
         story.append(Paragraph(escape(item), styles["Normal"]))
+    story.append(Paragraph("Screening calculations", styles["Heading2"]))
+    for line in case["report"].splitlines():
+        if line.strip():
+            story.append(Paragraph(escape(line), styles["Code"]))
     if details:
         story.append(Paragraph("Calculated detail data — conceptual, not agency standard", styles["Heading2"]))
         for key in ("hs", "Ls", "La", "Lb", "Wb", "t_approach", "t_pool"):
             value = case["legacy"].get(key)
-            story.append(Paragraph(escape(f"{key}: {value} ft" if isinstance(value,(float,int)) else f"{key}: unavailable"), styles["Normal"]))
+            story.append(Paragraph(escape(f"{key}: {value:.2f} ft" if isinstance(value,(float,int)) else f"{key}: unavailable"), styles["Normal"]))
     SimpleDocTemplate(str(folder / "qc_report.pdf")).build(story)
     orbit_path = folder / "orbit.html"
     if orbit and case["legacy"]["basin_applies"] == "Yes":
