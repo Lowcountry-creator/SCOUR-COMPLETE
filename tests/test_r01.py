@@ -416,3 +416,10 @@ def test_errata_register():
 
     path = Path(__file__).resolve().parents[1] / "docs/ARCHITECTURE.md"
     assert "HEC-14 errata dated 2012-10-01" in path.read_text(encoding="utf-8")
+
+
+def test_equation_register():
+    from pathlib import Path
+
+    path = Path(__file__).resolve().parents[1] / "docs/VERIFICATION.md"
+    assert "HEC-14 equations 10.4–10.5" in path.read_text(encoding="utf-8")
