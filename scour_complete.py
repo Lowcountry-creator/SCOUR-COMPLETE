@@ -3,6 +3,7 @@ from basin_exit import basin_exit
 
 import argparse
 import json
+import math
 import sys
 from pathlib import Path
 from dataclasses import asdict
@@ -21,8 +22,40 @@ INFERENCES = [
     "I04: Interpolated HY-8 velocities are not independent jet predictions.",
 ]
 
+def finite_number(field, value):
+    if type(value) not in (int, float) or not math.isfinite(value):
+        raise ValueError(f"{field} must be a finite number")
+
+
+def validate_fields(data):
+    for field, value in data.items():
+        if field in ("project", "culvert", "description", "design_storm", "hy8_file",
+                     "min_class", "shape"):
+            if not isinstance(value, str):
+                raise ValueError(f"{field} must be text")
+        elif field == "V_LB":
+            if not isinstance(value, (list, tuple)) or len(value) != 4:
+                raise ValueError("V_LB requires four station velocities")
+            for station in value:
+                finite_number(field, station)
+            if min(value) < 0 or any(a < b for a, b in zip(value, value[1:])):
+                raise ValueError("V_LB must be nonnegative and nonincreasing")
+        elif value is not None or field not in ("slope", "HS_hy8", "basin_side_slope"):
+            finite_number(field, value)
+            if value < 0:
+                raise ValueError(f"{field} must be nonnegative")
+    if type(data.get("barrels", 1)) is not int:
+        raise ValueError("barrels must be an integer count")
+    for field in ("V_perm", "tau_perm"):
+        if data.get(field) == 0:
+            raise ValueError(f"{field} must be positive")
+
+
 def run_case(data):
     """Preserve original ten-block output; do not promote unverified methods."""
+    if not isinstance(data, dict):
+        raise ValueError("Case must be a JSON object")
+    validate_fields(data)
     data = dict(data)
     side_slope = data.pop("basin_side_slope", None)
     for field in ("V_perm", "tau_perm"):
@@ -38,6 +71,8 @@ def run_case(data):
         raise ValueError("yo exceeds hydraulic rise above the outlet bed")
     if abs(inp.Q / flow_area(inp, inp.yo) - inp.Vo) > 0.1:
         raise ValueError("Vo differs from Q/A by more than 0.1 fps")
+    if inp.V_LB[0] > inp.Vo:
+        raise ValueError("V_LB velocities exceed Vo")
     result = analyze(inp)
     exit_check = None
     if result.basin_applies == "Yes":

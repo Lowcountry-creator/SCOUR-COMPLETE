@@ -69,3 +69,13 @@ def test_permissible_required(field):
     del case[field]
     with pytest.raises(ValueError, match=field):
         run_case(case)
+
+
+@pytest.mark.parametrize("change,field", [
+    ({"Q": float("nan")}, "Q"), ({"yo": "2.8"}, "yo"),
+    ({"barrels": 1.0}, "barrels"), ({"V_channel": -1}, "V_channel"),
+    ({"V_LB": [10, 4, 5, 1]}, "V_LB"), ({"V_LB": [20, 5, 4, 1]}, "V_LB"),
+])
+def test_field_validation(change, field):
+    with pytest.raises(ValueError, match=field):
+        run_case(base(**change))
