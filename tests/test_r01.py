@@ -376,3 +376,13 @@ def test_unlisted_trial_is_named_by_size():
 def test_report_exit_numbers_low_tw():
     case = run_case(base(TW=.5, HS_hy8=None, basin_side_slope=2, V_perm=20))
     assert f"velocity {case['basin_exit']['velocity_fps']:.2f} fps" in case["report"]
+
+
+def test_legacy_cli_standalone_warning(tmp_path):
+    import json
+    from legacy.hec14_outlet_protection import main
+
+    report, data = tmp_path / "case.txt", tmp_path / "case.json"
+    main(["--example", "culv1", "--out", str(report), "--json-out", str(data)])
+    status = json.loads(data.read_text())["status"]
+    assert report.read_text().splitlines()[0] == report.read_text().splitlines()[-1] == status

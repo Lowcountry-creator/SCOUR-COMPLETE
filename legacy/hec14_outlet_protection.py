@@ -1042,7 +1042,8 @@ def main(argv: Optional[List[str]] = None) -> int:
         print("V_LB unavailable; calculation and design summary withheld.", file=sys.stderr)
         return 2
     r = analyze(inp)
-    report = format_report(inp, r)
+    status = "DEVELOPMENT ONLY: legacy workbook regression; design verification pending"
+    report = "\n".join([status, format_report(inp, r), status])
     if a.out:
         with open(a.out, "w", encoding="utf-8") as fh:
             fh.write(report + "\n")
@@ -1050,7 +1051,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         print(report)
     if a.json_out:
         with open(a.json_out, "w", encoding="utf-8") as fh:
-            json.dump({"inputs": asdict(inp), "results": _results_to_dict(r)},
+            json.dump({"status": status, "inputs": asdict(inp), "results": _results_to_dict(r)},
                       fh, indent=2)
     return 0
 
