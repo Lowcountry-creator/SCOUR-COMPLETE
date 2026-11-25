@@ -160,3 +160,11 @@ def test_wrong_import_units(tmp_path):
     changed.write_text(src.read_text().replace("UNITS                0", "UNITS                1"))
     with pytest.raises(ValueError, match="units flag"):
         inputs_from_hy8(changed, 0, 0, 3, rst_path=src.with_suffix(".rst"))
+
+
+def test_integer_discharge():
+    from pathlib import Path
+    from legacy.hy8_io import inputs_from_hy8
+
+    src = Path(__file__).resolve().parents[1] / "legacy/examples/HY8_Demo_Culverts.hy8"
+    assert inputs_from_hy8(src, 0, 0, 490).Q == 410.9

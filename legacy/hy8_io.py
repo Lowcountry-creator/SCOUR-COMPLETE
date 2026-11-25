@@ -368,7 +368,7 @@ def _flow_index(crossing: Hy8Crossing, table: RstTable,
     if isinstance(flow, int) and not isinstance(flow, bool):
         if -len(totals) <= flow < len(totals):
             return flow % len(totals)  # negative counts from the end
-        raise ValueError(f"flow index {flow} out of range (0 to {len(totals) - 1})")
+        flow = float(flow)  # Outside the column range, interpret as cfs.
     if isinstance(flow, float):
         for i, q in enumerate(totals):
             if q is not None and abs(q - flow) <= 0.5:
