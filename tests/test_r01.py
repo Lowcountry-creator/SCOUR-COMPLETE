@@ -342,3 +342,13 @@ def test_legacy_zero_stations():
     (.249, "Below moderate"), (.25, "Moderately"), (.4, "Moderately"), (.401, "Highly")])
 def test_rhds_soil_thresholds(k, expected):
     assert run_case(base(soil_k=k))["soil_screen"].startswith(expected)
+
+
+def test_gui_hy8_draft():
+    from pathlib import Path
+    from gui import import_draft
+
+    path = Path(__file__).resolve().parents[1] / "legacy/examples/HY8_Demo_Culverts.hy8"
+    draft = import_draft(path, 0, 0, 3)
+    assert draft["Q"] == 410.9 and draft["TW"] == 4.29
+    assert draft["V_perm"] is None and draft["V_LB"] is None

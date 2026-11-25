@@ -1,9 +1,20 @@
 """Development GUI shell. No independently verified design results."""
 import json
 import tkinter as tk
-from tkinter import filedialog, messagebox, ttk
+from tkinter import filedialog, messagebox, simpledialog, ttk
+from dataclasses import asdict
+from legacy.hy8_io import inputs_from_hy8
 from pathlib import Path
 from scour_complete import run_case, run_batch, STATUS, INFERENCES
+
+def import_draft(path, crossing, culvert, flow, *, confirmed=False):
+    inputs = inputs_from_hy8(path, crossing, culvert, flow, confirm_tailwater_datum=confirmed)
+    draft = asdict(inputs)
+    # Re-enter material, lining and energy dissipation data for this event.
+    for field in ("V_LB", "D50_trial", "min_class", "Ss", "V_perm", "tau_perm"):
+        draft[field] = None
+    return draft
+
 
 def display_report(result):
     cases = result if isinstance(result, list) else [result]
@@ -37,6 +48,33 @@ def main():
         if path:
             source.delete("1.0", "end")
             source.insert("1.0", Path(path).read_text(encoding="utf-8"))
+    def load_hy8():
+        path = filedialog.askopenfilename(filetypes=[("HY-8 project", "*.hy8")])
+        if not path:
+            return
+        selectors = []
+        for label in ("Crossing index", "Culvert index", "Flow column index"):
+            value = simpledialog.askinteger("HY-8 selection", label + " (zero-based)", minvalue=0)
+            if value is None:
+                return
+            selectors.append(value)
+        try:
+            try:
+                draft = import_draft(path, *selectors)
+            except ValueError as exc:
+                if "Confirm the common elevation datum" not in str(exc):
+                    raise
+                if not messagebox.askyesno("Tailwater datum", str(exc)):
+                    return
+                draft = import_draft(path, *selectors, confirmed=True)
+        except (ValueError, OSError, KeyError, IndexError) as exc:
+            messagebox.showerror("HY-8 import", str(exc))
+            return
+        state["result"] = None
+        source.delete("1.0", "end")
+        source.insert("1.0", json.dumps(draft, indent=2))
+        messagebox.showinfo("Imported event", "Replace null material and hydraulic criteria before running.")
+
     def run():
         state["result"] = None
         output.delete("1.0", "end")
@@ -66,7 +104,7 @@ def main():
             if failures:
                 messagebox.showerror("Report export", "\n".join(failures))
 
-    for label, callback in [("Load JSON", load), ("Run legacy screening", run), ("Export JSON", export),
+    for label, callback in [("Load JSON", load), ("Import HY-8", load_hy8), ("Run legacy screening", run), ("Export JSON", export),
                             ("Export PDF, text and chart", export_reports)]:
         ttk.Button(controls, text=label, command=callback).pack(side="left", padx=5, pady=5)
     root.mainloop()
