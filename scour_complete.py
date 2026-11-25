@@ -12,6 +12,7 @@ from hec14_outlet_protection import Inputs, analyze, format_report
 
 STATUS = "DEVELOPMENT ONLY — independent engineering verification pending"
 INFERENCES = [
+    'I05: Equivalent single-outlet geometry is a screening assumption. Multiple-barrel jet interaction is UNVERIFIED.',
     "I01: Alternative ranking is engineering judgment, not an agency procedure.",
     "I02: Conceptual geometry is illustrative, not predicted scour topography.",
     "I03: Legacy construction details are project-specific, not universal.",
@@ -25,6 +26,8 @@ def run_case(data):
     inp = Inputs.from_dict(data)
     if not data.get("V_LB") or not any(data["V_LB"]):
         raise ValueError("V_LB requires four supplied HY-8 station velocities")
+    if inp.barrels != 1:
+        raise ValueError("barrels must be one for framework screening; multiple outlets are unverified")
     result = analyze(inp)
     exit_check = None
     if result.basin_applies == "Yes":

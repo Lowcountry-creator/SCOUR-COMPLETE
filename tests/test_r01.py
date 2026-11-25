@@ -50,3 +50,8 @@ def test_relief_pipe_datum():
     path = Path(__file__).resolve().parents[1] / "legacy/examples/HY8_Demo_Culverts.hy8"
     with pytest.warns(UserWarning, match="bed 100.7"):
         assert inputs_from_hy8(path, 0, 1, 3).TW == pytest.approx(2.75)
+
+
+def test_multiple_outlets_withheld():
+    with pytest.raises(ValueError, match="barrels"):
+        run_case(base(barrels=3))
