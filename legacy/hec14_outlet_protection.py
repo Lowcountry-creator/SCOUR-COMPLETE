@@ -1034,6 +1034,13 @@ def main(argv: Optional[List[str]] = None) -> int:
     else:
         p.error("give an inputs JSON file, --hy8, --example or --template")
 
+    # Legacy defaults are retained for workbook regression and disclosed on import.
+    if a.hy8:
+        defaults = {key: getattr(inp, key) for key, supplied in (
+            ("V_perm", a.v_perm), ("tau_perm", a.tau_perm), ("D50_trial", a.d50),
+            ("min_class", a.min_class), ("Ss", None)) if supplied is None}
+        print(f"Legacy workbook assumptions: {defaults}", file=sys.stderr)
+
     if a.inputs_out:
         with open(a.inputs_out, "w", encoding="utf-8") as fh:
             json.dump(asdict(inp), fh, indent=2)

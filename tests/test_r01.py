@@ -386,3 +386,12 @@ def test_legacy_cli_standalone_warning(tmp_path):
     main(["--example", "culv1", "--out", str(report), "--json-out", str(data)])
     status = json.loads(data.read_text())["status"]
     assert report.read_text().splitlines()[0] == report.read_text().splitlines()[-1] == status
+
+
+def test_legacy_import_discloses_lining_defaults(capsys):
+    from pathlib import Path
+    from legacy.hec14_outlet_protection import main
+
+    path = Path(__file__).resolve().parents[1] / "legacy/examples/HY8_Demo_Culverts.hy8"
+    main(["--hy8", str(path), "--v-lb", "4", "3", "2", "1"])
+    assert "tau_perm" in capsys.readouterr().err
