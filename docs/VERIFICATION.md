@@ -1,5 +1,5 @@
 # Verification and inference register
-All inherited calculations are unverified for independent engineering use until checked against primary sources. Workbook regression is not independent validation. No test execution claimed.
+All inherited calculations are unverified for independent engineering use until checked against primary sources. Workbook regression is not independent validation. See QC_RESPONSE_R01.md for executed tests, fixture limits and independent source checks.
 | ID | Method / issue | Status |
 |---|---|---|
 | V01 | HEC-14 10.1–10.3 basin and limits | pending |
@@ -17,3 +17,5 @@ Inference I02: conceptual 3D geometry between calculated dimensions is illustrat
 Inference I03: inherited project-specific key trenches, freeboard and side slopes are not universal requirements; must become explicit user inputs or verified agency criteria.
 Inference I04: interpolation between supplied velocity stations is not an independent jet decay calculation.
 Display all relevant inference IDs in GUI and report. Record source, rationale, consequence and verification status for each new inference.
+
+The R01 response records partial checks for V01, V02, V05, V07 and V10. V08 remains open for authentic HY-8 data. Framework reports identify I05, I06, I07–I12, I13, I14, I15, I18 and I21; all ID definitions and legacy assumptions are catalogued in QC_REVIEW_R01.md §11.
