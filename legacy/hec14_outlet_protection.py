@@ -503,7 +503,9 @@ def analyze(inp: Inputs) -> Results:
     if inp.yo >= r.D:
         r.regime = "Barrel full at outlet"
     elif inp.yo < r.yc:
-        r.regime = "Supercritical at brink; tailwater submerges jet"
+        r.regime = "Supercritical at brink"
+        if inp.TW > r.yc:
+            r.regime += "; tailwater submerges jet"
     else:
         r.regime = "Subcritical at brink"
     r.Vo_check = inp.Q / r.A

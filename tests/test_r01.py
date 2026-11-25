@@ -280,3 +280,7 @@ def test_unexpected_batch_error(monkeypatch):
     assert scour_complete.run_batch([{}])[0]["error_type"] == "RuntimeError"
     with pytest.raises(RuntimeError):
         scour_complete.run_batch([{}], strict=True)
+
+
+def test_low_tailwater_regime():
+    assert run_case(base(TW=.5, HS_hy8=None))["legacy"]["regime"] == "Supercritical at brink"
