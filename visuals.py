@@ -34,12 +34,15 @@ def export_orbit(case, path, *, plotlyjs=True):
         raise ValueError("Missing basin geometry")
     # I02: illustrative interpolation, not a calculated scour surface.
     xs, ys, zs = [], [], []
-    for i in range(41):
-        t = i / 40
+    stations = [r["Ls"] * i / 30 for i in range(31)]
+    stations += [r["Ls"] + r["La"] * i / 10 for i in range(1, 11)]
+    for x in stations:
+        t = x / length
+        pool_fraction = min(x / r["Ls"], 1.0)
         w = inp["Wo"] + (width - inp["Wo"]) * t
         xs.append([length*t]*21)
         ys.append([w*(j/20-.5) for j in range(21)])
-        zs.append([-depth*4*t*(1-t)*4*(j/20)*(1-j/20) for j in range(21)])
+        zs.append([-depth*4*pool_fraction*(1-pool_fraction)*4*(j/20)*(1-j/20) for j in range(21)])
     fig = go.Figure(go.Surface(x=xs, y=ys, z=zs, colorscale="Earth"))
     fig.update_layout(title="I02: Conceptual unverified basin — NOT FOR CONSTRUCTION",
                       scene=dict(aspectmode="data", xaxis_title="Distance (ft)",

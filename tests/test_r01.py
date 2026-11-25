@@ -256,3 +256,15 @@ def test_low_tailwater_velocity_label(tmp_path):
     with patch.object(Axes, "plot", autospec=True) as plot:
         export_velocity_plot(run_case(base(TW=0, HS_hy8=None)), tmp_path / "plot.png")
     assert not plot.called
+
+
+def test_orbit_flat_apron(tmp_path):
+    import plotly.graph_objects as go
+    from unittest.mock import patch
+    from visuals import export_orbit
+
+    with patch.object(go.Figure, "write_html", autospec=True) as write_html:
+        export_orbit(run_case(base()), tmp_path / "orbit.html")
+    z = write_html.call_args.args[0].data[0].z
+    assert min(z[15]) < 0
+    assert all(value == 0 for row in z[30:] for value in row)
