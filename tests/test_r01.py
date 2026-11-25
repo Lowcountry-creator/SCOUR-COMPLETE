@@ -15,3 +15,8 @@ def test_status_on_standalone_report():
     assert case["report"].startswith(STATUS) and case["report"].endswith(STATUS)
     assert "option_1" not in case["legacy"]
     assert case["legacy_unverified_design_text"]["option_1"]
+
+
+def test_froude_gate():
+    with pytest.raises(ValueError, match="Fr >= 3"):
+        run_case(base(Vo=30, Q=30*14*2.8))

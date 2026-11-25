@@ -512,6 +512,8 @@ def analyze(inp: Inputs) -> Results:
         else "Does not match: check Q, width and outlet depth")
     r.ye = equivalent_depth(inp, r.A)
     r.Fr = inp.Vo / math.sqrt(g * r.ye)
+    if r.Fr >= 3:
+        raise ValueError("Fr >= 3: riprap basin procedure outside applicability")
     r.TW_ye = inp.TW / r.ye
     r.tailwater_case = ("High tailwater" if r.TW_ye > HIGH_TW_RATIO
                         else "Low tailwater")
