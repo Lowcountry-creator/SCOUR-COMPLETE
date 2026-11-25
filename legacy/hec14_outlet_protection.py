@@ -678,7 +678,7 @@ def analyze(inp: Inputs) -> Results:
             r.channel_class = "n/a"
         else:
             r.shear_result = "Exceeds vegetated lining"
-            # HEC-15 Shields form, bed only: D50 = tau / (0.047 (Ss-1) gamma)
+            # UNVERIFIED as a complete HEC-15 method. Legacy fixed-coefficient bed screen: D50 = tau / (0.047 (Ss-1) gamma)
             r.D50_channel = r.tau / (0.047 * (inp.Ss - 1.0) * inp.gamma_w)
             r.channel_class = _class_name(_class_index_for_d50(r.D50_channel))
 
