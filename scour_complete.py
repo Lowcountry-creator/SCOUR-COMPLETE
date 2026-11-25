@@ -82,7 +82,7 @@ def run_case(data):
         if field not in data:
             raise ValueError(f"{field} must be explicitly supplied")
     inp = Inputs.from_dict(data)
-    if not data.get("V_LB") or not any(data["V_LB"]):
+    if inp.V_LB is not None and not any(inp.V_LB):
         raise ValueError("V_LB requires four supplied HY-8 station velocities")
     if inp.barrels != 1:
         raise ValueError("barrels must be one for framework screening; multiple outlets are unverified")
@@ -92,7 +92,7 @@ def run_case(data):
         raise ValueError("yo exceeds hydraulic rise above the outlet bed")
     if abs(inp.Q / flow_area(inp, inp.yo) - inp.Vo) > 0.1:
         raise ValueError("Vo differs from Q/A by more than 0.1 fps")
-    if inp.V_LB[0] > inp.Vo:
+    if inp.V_LB and inp.V_LB[0] > inp.Vo:
         raise ValueError("V_LB velocities exceed Vo")
     result = analyze(inp)
     # HEC-14 (2006) 10.1.4 gives alternative thickness bases. Reporting

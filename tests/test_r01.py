@@ -353,3 +353,11 @@ def test_gui_hy8_draft():
     draft = import_draft(path, 0, 0, 3)
     assert draft["Q"] == 410.9 and draft["TW"] == 4.29
     assert draft["V_perm"] is None and draft["V_LB"] is None
+
+
+def test_low_tailwater_without_jet_data():
+    data = base(TW=.5, HS_hy8=None, basin_side_slope=2, V_perm=20)
+    del data["V_LB"]
+    case = run_case(data)
+    assert case["inputs"]["V_LB"] is None
+    assert case["basin_exit"]["passes"] and not case["legacy"]["decay_V"]

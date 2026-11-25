@@ -125,7 +125,7 @@ class Inputs:
 
     # HY-8 Riprap Basin screen, Downstream Riprap for High TW, jet velocities
     # at 1, 2, 3 and 4 basin lengths (LB), fps.
-    V_LB: List[float] = field(default_factory=lambda: [0.0, 0.0, 0.0, 0.0])
+    V_LB: Optional[List[float]] = None
 
     # HY-8 Pool Depth (HS) at the trial D50, Envelope Curve. Optional.
     HS_hy8: Optional[float] = None
@@ -154,9 +154,9 @@ class Inputs:
             raise ValueError("Ss must be > 1")
         if self.min_class not in CLASS_NAMES:
             raise ValueError(f"min_class must be one of {CLASS_NAMES}")
-        if not any(self.V_LB):
+        if self.V_LB is not None and not any(self.V_LB):
             raise ValueError("V_LB requires actual station velocities; all four are zero")
-        if len(self.V_LB) != 4:
+        if self.V_LB is not None and len(self.V_LB) != 4:
             raise ValueError("V_LB needs four velocities (1 to 4 LB)")
         if self.slope is not None and self.slope < 0:
             raise ValueError("slope must be >= 0 or None")
@@ -522,6 +522,8 @@ def analyze(inp: Inputs) -> Results:
     if r.Fr >= 3:
         raise ValueError("Fr >= 3: riprap basin procedure outside applicability")
     r.TW_ye = inp.TW / r.ye
+    if inp.V_LB is None and r.TW_ye > HIGH_TW_RATIO:
+        raise ValueError("V_LB required for high-tailwater jet screening")
     r.tailwater_case = ("High tailwater" if r.TW_ye > HIGH_TW_RATIO
                         else "Low tailwater")
 
@@ -615,9 +617,10 @@ def analyze(inp: Inputs) -> Results:
     r.high_tw_procedure = (
         "Yes, TW/ye > 0.75" if high_tw
         else "No, low tailwater: use the Sec 10.1 basin exit check")
-    r.decay_L = [r.LB * i for i in (1, 2, 3, 4)]
-    r.decay_V = list(inp.V_LB)
-    r.decay_ratio = [v / inp.Vo for v in inp.V_LB]
+    stations = inp.V_LB or []
+    r.decay_L = [r.LB * i for i in range(1, len(stations) + 1)]
+    r.decay_V = list(stations)
+    r.decay_ratio = [v / inp.Vo for v in stations]
 
     # ---- Block 7. Protection length --------------------------------------
     channel_faster = inp.V_channel > inp.V_perm
@@ -639,7 +642,7 @@ def analyze(inp: Inputs) -> Results:
 
     # ---- Block 8. Riprap sizing, Eq. 10.6 --------------------------------
     min_idx = _class_index(inp.min_class)
-    reach_V = [inp.Vo] + list(inp.V_LB[:3])  # velocity at upstream end
+    reach_V = [inp.Vo] + list(stations[:3]) if stations else []  # velocity at upstream end
     labels = ["Headwall to 1 LB", "1 LB to 2 LB", "2 LB to 3 LB",
               "3 LB to 4 LB"]
     r.reaches = []
@@ -653,9 +656,12 @@ def analyze(inp: Inputs) -> Results:
             within = "See block 7"
         r.reaches.append(Reach(label, start, r.LB * (i + 1), V, req,
                                _class_label(idx), within))
-    hw_idx = max(_class_index_for_d50(r.reaches[0].D50_required), min_idx,
-                 _class_index(r.smallest_no_pool_class))
-    r.headwall_class_lined = _class_name(hw_idx)
+    if r.reaches:
+        hw_idx = max(_class_index_for_d50(r.reaches[0].D50_required), min_idx,
+                     _class_index(r.smallest_no_pool_class))
+        r.headwall_class_lined = _class_name(hw_idx)
+    else:
+        r.headwall_class_lined = "Not evaluated"
 
     # ---- Block 9. Receiving channel check, HEC-15 shear basis -----------
     if inp.slope is None:
@@ -1032,7 +1038,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         with open(a.inputs_out, "w", encoding="utf-8") as fh:
             json.dump(asdict(inp), fh, indent=2)
 
-    if not any(inp.V_LB):
+    if not inp.V_LB or not any(inp.V_LB):
         print("V_LB unavailable; calculation and design summary withheld.", file=sys.stderr)
         return 2
     r = analyze(inp)
