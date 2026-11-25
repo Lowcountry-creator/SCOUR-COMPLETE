@@ -168,3 +168,10 @@ def test_integer_discharge():
 
     src = Path(__file__).resolve().parents[1] / "legacy/examples/HY8_Demo_Culverts.hy8"
     assert inputs_from_hy8(src, 0, 0, 490).Q == 410.9
+
+
+def test_gui_report_text():
+    from gui import display_report
+
+    text = display_report([run_case(base()), {"index": 1, "error": "bad inputs"}])
+    assert "\n10. Design summary" in text and "Case 2: bad inputs" in text
