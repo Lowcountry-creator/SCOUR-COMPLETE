@@ -32,9 +32,15 @@ print("M02 tau %.3f D50 %.3f u* %.3f Re %.3g D50_hec15 %.3f"%(tau,d,us,us*d/1.21
 # M-03
 for c in h.SCDOT_CLASSES: print("M03",c["name"],"2D50",2*c["d50"],"1.5Dmax",1.5*c["dmax"],"3D50",3*c["d50"],"2Dmax",2*c["dmax"])
 # M-07
-r=run_case({**b,"Vo":20.0,"Q":20*14*2.8})["legacy"]; print("M07", r["reaches"][0]["D50_required"], r["reaches"][0]["scdot_class"])
-# C-02 probe as written
-r=run_case({**b,"Vo":30.0,"Q":30*14*2.8,"D50_trial":1.3})["legacy"]; print("C02", round(r["Fr"],2), r["basin_applicable"], r["trial_gives"], r["option_2"][:70])
+case = run_case({**b, "Vo": 20.0, "Q": 20*14*2.8, "HS_hy8": None})
+assert case["reach_classes_2025"][0] == "F"
+print("M07", case["legacy"]["reaches"][0]["D50_required"], case["reach_classes_2025"][0])
+try:
+    run_case({**b, "Vo": 30, "Q": 30*14*2.8, "D50_trial": 1.3})
+except ValueError as exc:
+    assert "Fr >= 3" in str(exc)
+else:
+    raise AssertionError("Outside-range basin was accepted")
 # Sec 7: L/De, VL/Vo
 for name in ("culv1","culv2","culv4"):
     e=h.EXAMPLES[name]; rr=h.analyze(h.Inputs(**asdict(e)))
