@@ -192,3 +192,13 @@ def test_explicit_hydraulic_inputs(field):
     with pytest.raises(ValueError, match=field):
         run_case(data)
     assert run_case(base(TW=0, HS_hy8=None))["legacy"]["tailwater_case"] == "Low tailwater"
+
+
+@pytest.mark.parametrize("bad", [float("nan"), float("inf")])
+def test_batch_strict_json(bad):
+    import json
+    from scour_complete import run_batch
+
+    entries = json.loads(json.dumps(run_batch([base(Q=bad), base()]), allow_nan=False))
+    assert entries[0]["index"] == 0 and "Q" in entries[0]["error"]
+    assert entries[1]["legacy"]["L_adopted"] == 108

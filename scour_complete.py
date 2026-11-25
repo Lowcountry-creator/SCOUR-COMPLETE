@@ -148,7 +148,9 @@ def run_batch(cases):
     results = []
     for index, case in enumerate(cases):
         try:
-            results.append({"index": index, **run_case(case)})
+            entry = {"index": index, **run_case(case)}
+            json.dumps(entry, allow_nan=False)
+            results.append(entry)
         except Exception as exc:
             results.append({"index": index, "error": str(exc), "status": STATUS})
     return results
