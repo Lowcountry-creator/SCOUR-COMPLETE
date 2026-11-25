@@ -73,6 +73,7 @@ def run_case(data):
             raise ValueError("slope required with lining_basis")
         lining_basis = {key: lining_basis[key] for key in ("cover", "soil_group", "source_row")}
     validate_fields(data)
+    soil_k = data.pop("soil_k", None)
     apron_normal_depth = data.pop("apron_normal_depth_ft", None)
     dmax = data.pop("trial_dmax_ft", None)
     side_slope = data.pop("basin_side_slope", None)
@@ -147,6 +148,14 @@ def run_case(data):
                                  normal_depth=apron_normal_depth)
         except ValueError as exc:
             apron = {"status": str(exc)}
+    if soil_k is None:
+        soil_screen = "Soil K missing; SCDOT soil screen incomplete."
+    elif soil_k > 0.4:
+        soil_screen = "Highly erodible; outlet protection required."
+    elif soil_k >= 0.25:
+        soil_screen = "Moderately erodible; outlet protection may be required."
+    else:
+        soil_screen = "Below moderate K threshold; review design-storm scour potential."
     legacy = asdict(result)
     summary = {key: legacy.pop(key) for key in
                ("option_1", "option_2", "vertical_limits", "banks")}
@@ -165,8 +174,8 @@ def run_case(data):
     else:
         lining_note = ("UNVERIFIED permissible thresholds: supply lining_basis "
                        "(cover, soil_group, source_row) and slope for traceability.")
-    report = "\n".join([STATUS, *INFERENCES, lining_note, class_note, thickness_note, format_report(inp, result), STATUS])
-    return {"status": STATUS, "lining_basis": lining_basis, "inputs": asdict(inp), "supplied_width_ft": supplied_width, "legacy": legacy,
+    report = "\n".join([STATUS, *INFERENCES, soil_screen, lining_note, class_note, thickness_note, format_report(inp, result), STATUS])
+    return {"status": STATUS, "soil_k": soil_k, "soil_screen": soil_screen, "lining_basis": lining_basis, "inputs": asdict(inp), "supplied_width_ft": supplied_width, "legacy": legacy,
             "legacy_unverified_design_text": summary,
             "reach_classes_2025": reach_classes, "trial_dmax_ft": dmax, "thickness": thickness, "basin_side_slope": side_slope, "apron": apron, "apron_normal_depth_ft": apron_normal_depth, "basin_exit": exit_check, "report": report, "recommendations": [],
             "inferences": INFERENCES,

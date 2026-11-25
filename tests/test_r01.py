@@ -336,3 +336,9 @@ def test_legacy_zero_stations():
 
     with pytest.raises(ValueError, match="V_LB"):
         analyze(Inputs(**base(V_LB=[0]*4)))
+
+
+@pytest.mark.parametrize("k, expected", [
+    (.249, "Below moderate"), (.25, "Moderately"), (.4, "Moderately"), (.401, "Highly")])
+def test_rhds_soil_thresholds(k, expected):
+    assert run_case(base(soil_k=k))["soil_screen"].startswith(expected)
