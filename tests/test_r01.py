@@ -126,3 +126,14 @@ def test_2025_classes():
     case = run_case(base(Vo=20, Q=20*14*2.8, HS_hy8=None))
     assert case["reach_classes_2025"][0] == "F"
     assert case["trial_dmax_ft"] == 1.33
+
+
+def test_batch_optional_orbit(tmp_path):
+    from reporting import export_batch
+
+    cases = [run_case(base()), run_case(asdict(EXAMPLES["culv2"]))]
+    summary = export_batch(cases, tmp_path, orbit=True)
+    assert [r["orbit"] for r in summary] == ["written", "no basin geometry"]
+    assert not summary[1]["error"]
+    assert (tmp_path / "plotly.min.js").exists()
+    assert "../plotly.min.js" in (tmp_path / "case_0001/orbit.html").read_text()

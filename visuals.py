@@ -19,7 +19,7 @@ def export_velocity_plot(case, path):
     fig.savefig(path, dpi=180)
     plt.close(fig)
 
-def export_orbit(case, path):
+def export_orbit(case, path, *, plotlyjs=True):
     """Conceptual basin surface, not predicted scour; no invented dimensions."""
     import plotly.graph_objects as go
     r, inp = case["legacy"], case["inputs"]
@@ -40,4 +40,4 @@ def export_orbit(case, path):
     fig.update_layout(title="I02: Conceptual unverified basin — NOT FOR CONSTRUCTION",
                       scene=dict(aspectmode="data", xaxis_title="Distance (ft)",
                                  yaxis_title="Width (ft)", zaxis_title="Relative elevation (ft)"))
-    fig.write_html(str(path), include_plotlyjs=True)
+    fig.write_html(str(path), include_plotlyjs=plotlyjs)
