@@ -20,8 +20,13 @@ def run_case(data):
     """Preserve original ten-block output; do not promote unverified methods."""
     inp = Inputs.from_dict(data)
     result = analyze(inp)
-    return {"status": STATUS, "inputs": asdict(inp), "legacy": asdict(result),
-            "report": format_report(inp, result), "recommendations": [],
+    legacy = asdict(result)
+    summary = {key: legacy.pop(key) for key in
+               ("option_1", "option_2", "vertical_limits", "banks")}
+    report = "\n".join([STATUS, *INFERENCES, format_report(inp, result), STATUS])
+    return {"status": STATUS, "inputs": asdict(inp), "legacy": legacy,
+            "legacy_unverified_design_text": summary,
+            "report": report, "recommendations": [],
             "inferences": INFERENCES,
             "blockers": ["Independent equation and applicability verification pending",
                          "Independent jet decay not implemented"]}
