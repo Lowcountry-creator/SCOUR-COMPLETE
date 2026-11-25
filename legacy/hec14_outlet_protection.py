@@ -49,7 +49,7 @@ Number = Union[int, float]
 # Order matters: class selection walks this list from smallest to largest.
 SCDOT_CLASSES: List[Dict[str, Number]] = [
     {"name": "A", "d50": 0.50, "dmax": 0.75},
-    {"name": "B", "d50": 0.75, "dmax": 1.30},
+    {"name": "B", "d50": 0.75, "dmax": 1.33},
     {"name": "C", "d50": 1.30, "dmax": 1.80},
     {"name": "D", "d50": 1.80, "dmax": 2.25},
 ]

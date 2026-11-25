@@ -423,3 +423,9 @@ def test_equation_register():
 
     path = Path(__file__).resolve().parents[1] / "docs/VERIFICATION.md"
     assert "HEC-14 equations 10.4–10.5" in path.read_text(encoding="utf-8")
+
+
+def test_legacy_class_b_maximum():
+    from legacy.hec14_outlet_protection import SCDOT_CLASSES
+
+    assert next(c["dmax"] for c in SCDOT_CLASSES if c["name"] == "B") == 1.33
