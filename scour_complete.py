@@ -144,7 +144,7 @@ def run_case(data):
             "blockers": ["Independent equation and applicability verification pending",
                          "Independent jet decay not implemented"]}
 
-def run_batch(cases):
+def run_batch(cases, *, strict=False):
     results = []
     for index, case in enumerate(cases):
         try:
@@ -152,7 +152,10 @@ def run_batch(cases):
             json.dumps(entry, allow_nan=False)
             results.append(entry)
         except Exception as exc:
-            results.append({"index": index, "error": str(exc), "status": STATUS})
+            if strict and not isinstance(exc, (ValueError, OverflowError)):
+                raise
+            results.append({"index": index, "error": str(exc), "error_type": type(exc).__name__,
+                            "status": STATUS})
     return results
 
 def main():

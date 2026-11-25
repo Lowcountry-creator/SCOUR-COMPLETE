@@ -268,3 +268,15 @@ def test_orbit_flat_apron(tmp_path):
     z = write_html.call_args.args[0].data[0].z
     assert min(z[15]) < 0
     assert all(value == 0 for row in z[30:] for value in row)
+
+
+def test_unexpected_batch_error(monkeypatch):
+    import scour_complete
+
+    def fail(_):
+        raise RuntimeError("unexpected")
+
+    monkeypatch.setattr(scour_complete, "run_case", fail)
+    assert scour_complete.run_batch([{}])[0]["error_type"] == "RuntimeError"
+    with pytest.raises(RuntimeError):
+        scour_complete.run_batch([{}], strict=True)
