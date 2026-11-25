@@ -371,3 +371,8 @@ def test_unlisted_trial_is_named_by_size():
     result = analyze(case)
     assert result.largest_valid_class.startswith("None")
     assert result.option_2.startswith("Trial D50 0.1 ft basin")
+
+
+def test_report_exit_numbers_low_tw():
+    case = run_case(base(TW=.5, HS_hy8=None, basin_side_slope=2, V_perm=20))
+    assert f"velocity {case['basin_exit']['velocity_fps']:.2f} fps" in case["report"]

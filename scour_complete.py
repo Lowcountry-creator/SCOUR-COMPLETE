@@ -174,7 +174,12 @@ def run_case(data):
     else:
         lining_note = ("UNVERIFIED permissible thresholds: supply lining_basis "
                        "(cover, soil_group, source_row) and slope for traceability.")
-    report = "\n".join([STATUS, *INFERENCES, soil_screen, lining_note, class_note, thickness_note, format_report(inp, result), STATUS])
+    exit_note = "Basin exit: no checked geometry."
+    if exit_check:
+        exit_note = (f"Basin exit critical depth {exit_check['depth_ft']:.2f} ft; "
+                     f"velocity {exit_check['velocity_fps']:.2f} fps; allowable "
+                     f"{exit_check['allowable_fps']:.2f} fps.")
+    report = "\n".join([STATUS, *INFERENCES, exit_note, soil_screen, lining_note, class_note, thickness_note, format_report(inp, result), STATUS])
     return {"status": STATUS, "soil_k": soil_k, "soil_screen": soil_screen, "lining_basis": lining_basis, "inputs": asdict(inp), "supplied_width_ft": supplied_width, "legacy": legacy,
             "legacy_unverified_design_text": summary,
             "reach_classes_2025": reach_classes, "trial_dmax_ft": dmax, "thickness": thickness, "basin_side_slope": side_slope, "apron": apron, "apron_normal_depth_ft": apron_normal_depth, "basin_exit": exit_check, "report": report, "recommendations": [],
