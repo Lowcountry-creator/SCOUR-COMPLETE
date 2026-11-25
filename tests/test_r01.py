@@ -297,3 +297,13 @@ def test_lining_provenance():
     assert case["lining_basis"] == basis and "project criterion" in case["report"]
     with pytest.raises(ValueError, match="slope"):
         run_case(base(lining_basis=basis, slope=None))
+
+
+def test_published_apron_dimensions():
+    from methods_apron import apron_screen
+
+    apron = apron_screen(85, 5, 1.6, 2.65)
+    assert apron["example_class"] == 2
+    assert (apron["length_ft"], apron["thickness_ft"]) == (20, 1.65)
+    assert apron["end_width_ft"] == pytest.approx(28.3, abs=.05)
+    assert apron_screen(85, 5, 1.6, 2.7)["d50_ft"] < apron["d50_ft"]

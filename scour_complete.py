@@ -1,5 +1,6 @@
 """Development framework. Legacy outputs are NOT verified design recommendations."""
 from basin_exit import basin_exit
+from methods_apron import apron_screen
 from scdot_stone import GRADATIONS, reach_class
 
 import argparse
@@ -72,6 +73,7 @@ def run_case(data):
             raise ValueError("slope required with lining_basis")
         lining_basis = {key: lining_basis[key] for key in ("cover", "soil_group", "source_row")}
     validate_fields(data)
+    apron_normal_depth = data.pop("apron_normal_depth_ft", None)
     dmax = data.pop("trial_dmax_ft", None)
     side_slope = data.pop("basin_side_slope", None)
     for field in ("V_perm", "tau_perm", "TW", "V_channel", "shape", "barrels",
@@ -137,6 +139,14 @@ def run_case(data):
     if result.tie_to_hy8.startswith("Does not tie"):
         raise ValueError("HS_hy8 disagrees with trial pool depth by more than 0.05 ft; "
                          "reconcile HY-8 station spacing before using this case")
+    apron = {"status": "Outside single unembedded circular outlet screen (60 in maximum)"}
+    if inp.shape == "circular" and inp.embedment == 0 and inp.rise <= 5:
+        try:
+            apron = apron_screen(inp.Q, inp.rise, inp.TW, inp.Ss,
+                                 supercritical=inp.yo < result.yc,
+                                 normal_depth=apron_normal_depth)
+        except ValueError as exc:
+            apron = {"status": str(exc)}
     legacy = asdict(result)
     summary = {key: legacy.pop(key) for key in
                ("option_1", "option_2", "vertical_limits", "banks")}
@@ -158,7 +168,7 @@ def run_case(data):
     report = "\n".join([STATUS, *INFERENCES, lining_note, class_note, thickness_note, format_report(inp, result), STATUS])
     return {"status": STATUS, "lining_basis": lining_basis, "inputs": asdict(inp), "supplied_width_ft": supplied_width, "legacy": legacy,
             "legacy_unverified_design_text": summary,
-            "reach_classes_2025": reach_classes, "trial_dmax_ft": dmax, "thickness": thickness, "basin_side_slope": side_slope, "basin_exit": exit_check, "report": report, "recommendations": [],
+            "reach_classes_2025": reach_classes, "trial_dmax_ft": dmax, "thickness": thickness, "basin_side_slope": side_slope, "apron": apron, "apron_normal_depth_ft": apron_normal_depth, "basin_exit": exit_check, "report": report, "recommendations": [],
             "inferences": INFERENCES,
             "blockers": ["Independent equation and applicability verification pending",
                          "Independent jet decay not implemented"]}
