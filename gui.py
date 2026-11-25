@@ -5,6 +5,7 @@ from tkinter import filedialog, messagebox, simpledialog, ttk
 from dataclasses import asdict
 from legacy.hy8_io import inputs_from_hy8
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from scour_complete import run_case, run_batch, STATUS, INFERENCES
 
 def import_draft(path, crossing, culvert, flow, *, confirmed=False):
@@ -92,6 +93,33 @@ def main():
         path = filedialog.asksaveasfilename(defaultextension=".json")
         if path:
             Path(path).write_text(json.dumps(state["result"], indent=2, allow_nan=False), encoding="utf-8")
+    def show_plot():
+        cases = state["result"]
+        if cases is None:
+            return
+        case = cases
+        if isinstance(cases, list):
+            if not cases:
+                return
+            number = simpledialog.askinteger("Velocity plot", "Case number (starting at 1)",
+                                             minvalue=1, maxvalue=len(cases))
+            if number is None:
+                return
+            case = cases[number - 1]
+        if "error" in case:
+            messagebox.showerror("Case error", case["error"])
+            return
+        from visuals import export_velocity_plot
+        with TemporaryDirectory() as folder:
+            path = Path(folder) / "velocity.png"
+            export_velocity_plot(case, path)
+            photo = tk.PhotoImage(file=path).subsample(2)
+        window = tk.Toplevel(root)
+        window.title("Velocity profile")
+        chart = ttk.Label(window, image=photo)
+        chart.image = photo
+        chart.pack()
+
     def export_reports():
         if state["result"] is None:
             return
@@ -105,7 +133,7 @@ def main():
                 messagebox.showerror("Report export", "\n".join(failures))
 
     for label, callback in [("Load JSON", load), ("Import HY-8", load_hy8), ("Run legacy screening", run), ("Export JSON", export),
-                            ("Export PDF, text and chart", export_reports)]:
+                            ("Velocity plot", show_plot), ("Export PDF, text and chart", export_reports)]:
         ttk.Button(controls, text=label, command=callback).pack(side="left", padx=5, pady=5)
     root.mainloop()
 
