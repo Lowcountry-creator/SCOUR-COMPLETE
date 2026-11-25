@@ -124,6 +124,9 @@ def run_case(data):
         if exit_check and exit_check["passes"] and inp.TW / inp.yo <= 0.75:
             result.option_2 = ("Trial basin exit passes. No additional downstream "
                                "riprap indicated by Step 5 for this basin.")
+    if result.tie_to_hy8.startswith("Does not tie"):
+        raise ValueError("HS_hy8 disagrees with trial pool depth by more than 0.05 ft; "
+                         "reconcile HY-8 station spacing before using this case")
     legacy = asdict(result)
     summary = {key: legacy.pop(key) for key in
                ("option_1", "option_2", "vertical_limits", "banks")}

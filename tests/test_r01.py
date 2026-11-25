@@ -284,3 +284,8 @@ def test_unexpected_batch_error(monkeypatch):
 
 def test_low_tailwater_regime():
     assert run_case(base(TW=.5, HS_hy8=None))["legacy"]["regime"] == "Supercritical at brink"
+
+
+def test_station_tie_failure():
+    with pytest.raises(ValueError, match="station spacing"):
+        run_case(base(D50_trial=.5))
