@@ -61,3 +61,11 @@ def test_multiple_outlets_withheld():
 def test_inconsistent_brink(change, field):
     with pytest.raises(ValueError, match=field):
         run_case(base(**change))
+
+
+@pytest.mark.parametrize("field", ["V_perm", "tau_perm"])
+def test_permissible_required(field):
+    case = base()
+    del case[field]
+    with pytest.raises(ValueError, match=field):
+        run_case(case)

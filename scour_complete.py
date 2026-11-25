@@ -12,6 +12,7 @@ from hec14_outlet_protection import Inputs, analyze, flow_area, format_report
 
 STATUS = "DEVELOPMENT ONLY — independent engineering verification pending"
 INFERENCES = [
+    'I14: Confirm the supplied permissible velocity and shear against site cover, soil, slope and applicable table row.',
     'I21: Full-barrel outlet results are screening only. Brink velocity tolerance is 0.1 fps.',
     'I05: Equivalent single-outlet geometry is a screening assumption. Multiple-barrel jet interaction is UNVERIFIED.',
     "I01: Alternative ranking is engineering judgment, not an agency procedure.",
@@ -24,6 +25,9 @@ def run_case(data):
     """Preserve original ten-block output; do not promote unverified methods."""
     data = dict(data)
     side_slope = data.pop("basin_side_slope", None)
+    for field in ("V_perm", "tau_perm"):
+        if field not in data:
+            raise ValueError(f"{field} must be explicitly supplied for the receiving lining")
     inp = Inputs.from_dict(data)
     if not data.get("V_LB") or not any(data["V_LB"]):
         raise ValueError("V_LB requires four supplied HY-8 station velocities")
