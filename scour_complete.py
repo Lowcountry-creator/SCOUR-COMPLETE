@@ -8,10 +8,11 @@ from pathlib import Path
 from dataclasses import asdict
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "legacy"))
-from hec14_outlet_protection import Inputs, analyze, format_report
+from hec14_outlet_protection import Inputs, analyze, flow_area, format_report
 
 STATUS = "DEVELOPMENT ONLY — independent engineering verification pending"
 INFERENCES = [
+    'I21: Full-barrel outlet results are screening only. Brink velocity tolerance is 0.1 fps.',
     'I05: Equivalent single-outlet geometry is a screening assumption. Multiple-barrel jet interaction is UNVERIFIED.',
     "I01: Alternative ranking is engineering judgment, not an agency procedure.",
     "I02: Conceptual geometry is illustrative, not predicted scour topography.",
@@ -28,6 +29,11 @@ def run_case(data):
         raise ValueError("V_LB requires four supplied HY-8 station velocities")
     if inp.barrels != 1:
         raise ValueError("barrels must be one for framework screening; multiple outlets are unverified")
+    inp.validate()
+    if inp.yo > inp.rise - inp.embedment:
+        raise ValueError("yo exceeds hydraulic rise above the outlet bed")
+    if abs(inp.Q / flow_area(inp, inp.yo) - inp.Vo) > 0.1:
+        raise ValueError("Vo differs from Q/A by more than 0.1 fps")
     result = analyze(inp)
     exit_check = None
     if result.basin_applies == "Yes":

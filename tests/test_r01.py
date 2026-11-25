@@ -55,3 +55,9 @@ def test_relief_pipe_datum():
 def test_multiple_outlets_withheld():
     with pytest.raises(ValueError, match="barrels"):
         run_case(base(barrels=3))
+
+
+@pytest.mark.parametrize("change,field", [({"yo": 7}, "yo"), ({"Vo": 8}, "Vo")])
+def test_inconsistent_brink(change, field):
+    with pytest.raises(ValueError, match=field):
+        run_case(base(**change))
