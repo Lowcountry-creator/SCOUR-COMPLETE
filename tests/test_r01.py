@@ -48,8 +48,10 @@ def test_relief_pipe_datum():
     from legacy.hy8_io import inputs_from_hy8
 
     path = Path(__file__).resolve().parents[1] / "legacy/examples/HY8_Demo_Culverts.hy8"
+    with pytest.raises(ValueError, match="Confirm the common elevation datum"):
+        inputs_from_hy8(path, 0, 1, 3)
     with pytest.warns(UserWarning, match="bed 100.7"):
-        assert inputs_from_hy8(path, 0, 1, 3).TW == pytest.approx(2.75)
+        assert inputs_from_hy8(path, 0, 1, 3, confirm_tailwater_datum=True).TW == pytest.approx(2.75)
 
 
 def test_multiple_outlets_withheld():

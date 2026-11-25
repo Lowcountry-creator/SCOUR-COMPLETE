@@ -392,6 +392,7 @@ def inputs_from_hy8(hy8_path: Union[str, Path],
                     culvert: Union[str, int],
                     flow: Union[str, int, float],
                     rst_path: Optional[Union[str, Path]] = None,
+                    *, confirm_tailwater_datum: bool = False,
                     **overrides) -> Inputs:
     """Build block 1 ``Inputs`` from an HY-8 project and its results.
 
@@ -472,9 +473,11 @@ def inputs_from_hy8(hy8_path: Union[str, Path],
             outlet_tw = reported
         else:
             import warnings
-            warnings.warn(f"Summary TW {reported:g} ft differs from outlet-relative TW "
-                          f"{outlet_tw:g} ft (WSE {elevations[0]:g}, bed {bed:g} ft).",
-                          UserWarning, stacklevel=2)
+            detail = (f"Summary TW {reported:g} ft differs from outlet-relative TW "
+                      f"{outlet_tw:g} ft (WSE {elevations[0]:g}, bed {bed:g} ft).")
+            if not confirm_tailwater_datum:
+                raise ValueError(detail + " Confirm the common elevation datum to continue.")
+            warnings.warn(detail, UserWarning, stacklevel=2)
 
     span = culv.span_ft
     data = dict(

@@ -960,7 +960,7 @@ def _inputs_from_hy8_args(a: argparse.Namespace) -> Inputs:
         flow = -1  # resolved below to the last column
     inp = hy8_io.inputs_from_hy8(
         a.hy8, _as_key(a.crossing), _as_key(a.culvert), flow,
-        rst_path=a.rst, **overrides)
+        rst_path=a.rst, confirm_tailwater_datum=a.confirm_tailwater_datum, **overrides)
     if a.v_lb is None:
         print("WARNING: no --v-lb given; jet velocities at 1 to 4 LB are 0. "
               "Blocks 6 to 8 and 10 are placeholders until you enter the "
@@ -1000,6 +1000,8 @@ def main(argv: Optional[List[str]] = None) -> int:
                           "total discharge in cfs (default: last column)")
     hy8.add_argument("--v-lb", nargs=4, type=float, metavar="V",
                      help="HY-8 jet velocity at 1, 2, 3, 4 LB, fps")
+    hy8.add_argument("--confirm-tailwater-datum", action="store_true",
+                     help="confirm WSE and outlet bed share a vertical datum")
     hy8.add_argument("--hs", type=float, help="HY-8 Pool Depth HS, ft")
     hy8.add_argument("--d50", type=float, help="trial D50, ft (default 0.75)")
     hy8.add_argument("--min-class", choices=CLASS_NAMES,
