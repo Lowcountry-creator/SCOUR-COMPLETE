@@ -1030,7 +1030,13 @@ def main(argv: Optional[List[str]] = None) -> int:
         inp = _inputs_from_hy8_args(a)
     elif a.inputs:
         with open(a.inputs, encoding="utf-8") as fh:
-            inp = Inputs.from_dict(json.load(fh))
+            data = json.load(fh)
+            inp = Inputs.from_dict(data)
+            assumed = {key: getattr(inp, key) for key in
+                       ("V_perm", "tau_perm", "D50_trial", "Ss", "min_class", "embedment",
+                        "shape", "barrels") if key not in data}
+            if assumed:
+                print(f"Legacy workbook assumptions: {assumed}", file=sys.stderr)
     else:
         p.error("give an inputs JSON file, --hy8, --example or --template")
 

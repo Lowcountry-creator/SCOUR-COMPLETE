@@ -429,3 +429,15 @@ def test_legacy_class_b_maximum():
     from legacy.hec14_outlet_protection import SCDOT_CLASSES
 
     assert next(c["dmax"] for c in SCDOT_CLASSES if c["name"] == "B") == 1.33
+
+
+def test_legacy_json_assumptions(tmp_path, capsys):
+    import json
+    from legacy.hec14_outlet_protection import main
+
+    data = base()
+    del data["V_perm"]
+    path = tmp_path / "input.json"
+    path.write_text(json.dumps(data))
+    main([str(path)])
+    assert "V_perm" in capsys.readouterr().err
