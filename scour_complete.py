@@ -60,6 +60,7 @@ def run_case(data):
         raise ValueError("Case must be a JSON object")
     validate_fields(data)
     data = dict(data)
+    dmax = data.pop("trial_dmax_ft", None)
     side_slope = data.pop("basin_side_slope", None)
     for field in ("V_perm", "tau_perm"):
         if field not in data:
@@ -77,6 +78,17 @@ def run_case(data):
     if inp.V_LB[0] > inp.Vo:
         raise ValueError("V_LB velocities exceed Vo")
     result = analyze(inp)
+    # HEC-14 (2006) 10.1.4 gives alternative thickness bases. Reporting
+    # the larger as a conservative screen is engineering judgment.
+    thickness = None
+    if result.basin_applies == "Yes" and dmax is not None:
+        if dmax < inp.D50_trial:
+            raise ValueError("trial_dmax_ft must be at least D50_trial")
+        thickness = {}
+        for name, d50_value, factor in (("approach", result.t_approach, 2),
+                                        ("pool", result.t_pool, 1.5)):
+            thickness[name] = {"d50_basis_ft": d50_value, "dmax_basis_ft": factor*dmax,
+                               "screen_ft": max(d50_value, factor*dmax)}
     exit_check = None
     if result.basin_applies == "Yes":
         if side_slope is None:
@@ -98,10 +110,16 @@ def run_case(data):
     legacy = asdict(result)
     summary = {key: legacy.pop(key) for key in
                ("option_1", "option_2", "vertical_limits", "banks")}
-    report = "\n".join([STATUS, *INFERENCES, format_report(inp, result), STATUS])
+    thickness_note = "Dmax unavailable: block 5 gives the D50 basis only."
+    if thickness:
+        thickness_note = "Thickness comparison (larger governs this screen): " + ", ".join(
+            f"{name}: D50 basis {v['d50_basis_ft']:.2f} ft, Dmax basis "
+            f"{v['dmax_basis_ft']:.2f} ft, use {v['screen_ft']:.2f} ft"
+            for name, v in thickness.items())
+    report = "\n".join([STATUS, *INFERENCES, thickness_note, format_report(inp, result), STATUS])
     return {"status": STATUS, "inputs": asdict(inp), "legacy": legacy,
             "legacy_unverified_design_text": summary,
-            "basin_side_slope": side_slope, "basin_exit": exit_check, "report": report, "recommendations": [],
+            "trial_dmax_ft": dmax, "thickness": thickness, "basin_side_slope": side_slope, "basin_exit": exit_check, "report": report, "recommendations": [],
             "inferences": INFERENCES,
             "blockers": ["Independent equation and applicability verification pending",
                          "Independent jet decay not implemented"]}
