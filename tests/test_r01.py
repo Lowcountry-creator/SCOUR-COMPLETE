@@ -441,3 +441,13 @@ def test_legacy_json_assumptions(tmp_path, capsys):
     path.write_text(json.dumps(data))
     main([str(path)])
     assert "V_perm" in capsys.readouterr().err
+
+
+def test_export_old_report_wrapped(tmp_path):
+    from reporting import export_case
+
+    case = run_case(base())
+    case["report"] = "Previously saved workbook text"
+    export_case(case, tmp_path)
+    assert (tmp_path / "legacy_report.txt").read_text().splitlines() == [
+        STATUS, case["report"], STATUS]

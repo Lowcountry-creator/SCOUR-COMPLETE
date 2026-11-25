@@ -10,6 +10,10 @@ def export_case(case, folder, *, details=False, orbit=False, plotlyjs=True):
     from xml.sax.saxutils import escape
     folder = Path(folder)
     folder.mkdir(parents=True, exist_ok=True)
+    from scour_complete import STATUS
+    report = case["report"]
+    if not (report.startswith(STATUS) and report.endswith(STATUS)):
+        case = {**case, "status": STATUS, "report": "\n".join((STATUS, report, STATUS))}
     (folder / "result.json").write_text(json.dumps(case, indent=2, allow_nan=False), encoding="utf-8")
     (folder / "legacy_report.txt").write_text(case["report"], encoding="utf-8")
     plot = folder / "velocity.png"
