@@ -409,3 +409,10 @@ def test_gui_dependency_note():
 
     path = Path(__file__).resolve().parents[1] / "README.md"
     assert "python -m tkinter" in path.read_text(encoding="utf-8")
+
+
+def test_errata_register():
+    from pathlib import Path
+
+    path = Path(__file__).resolve().parents[1] / "docs/ARCHITECTURE.md"
+    assert "HEC-14 errata dated 2012-10-01" in path.read_text(encoding="utf-8")
