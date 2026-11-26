@@ -49,7 +49,7 @@ Number = Union[int, float]
 # Order matters: class selection walks this list from smallest to largest.
 SCDOT_CLASSES: List[Dict[str, Number]] = [
     {"name": "A", "d50": 0.50, "dmax": 0.75},
-    {"name": "B", "d50": 0.75, "dmax": 1.30},
+    {"name": "B", "d50": 0.75, "dmax": 1.33},
     {"name": "C", "d50": 1.30, "dmax": 1.80},
     {"name": "D", "d50": 1.80, "dmax": 2.25},
 ]
@@ -60,7 +60,7 @@ NONE_OF_A_TO_D = "None of A to D"
 
 # Riprap basin equation limits, HEC-14 Sec 10.1.5 Step 2.
 D50_YE_MIN = 0.1
-D50_YE_MAX = 0.7
+D50_YE_MAX = 0.7  # HY-8 screening range, not a HEC-14 Step 2 upper bound.
 HS_D50_MIN = 2.0
 
 # Tailwater threshold for the high tailwater procedure, HEC-14 Sec 10.1.3.
@@ -97,8 +97,8 @@ class Inputs:
     Q: float = 0.0  # Design discharge, cfs
     yo: float = 0.0  # Brink (outlet) depth, ft
     Vo: float = 0.0  # Brink velocity, fps
-    TW: float = 0.0  # Tailwater depth above embedded bed, ft
-    V_channel: float = 0.0  # Tailwater (channel) velocity, fps
+    TW: Optional[float] = None  # Tailwater depth above embedded bed, ft
+    V_channel: Optional[float] = None  # Tailwater (channel) velocity, fps
 
     # Plans.
     shape: str = "box"  # "box" (rectangular) or "circular"
@@ -125,7 +125,7 @@ class Inputs:
 
     # HY-8 Riprap Basin screen, Downstream Riprap for High TW, jet velocities
     # at 1, 2, 3 and 4 basin lengths (LB), fps.
-    V_LB: List[float] = field(default_factory=lambda: [0.0, 0.0, 0.0, 0.0])
+    V_LB: Optional[List[float]] = None
 
     # HY-8 Pool Depth (HS) at the trial D50, Envelope Curve. Optional.
     HS_hy8: Optional[float] = None
@@ -143,6 +143,9 @@ class Inputs:
         for name in positives:
             if getattr(self, name) <= 0:
                 raise ValueError(f"{name} must be > 0")
+        for field_name in ("TW", "V_channel"):
+            if getattr(self, field_name) is None:
+                raise ValueError(f"{field_name} must be supplied explicitly")
         if self.TW < 0 or self.embedment < 0:
             raise ValueError("TW and embedment must be >= 0")
         if self.embedment >= self.rise:
@@ -151,7 +154,9 @@ class Inputs:
             raise ValueError("Ss must be > 1")
         if self.min_class not in CLASS_NAMES:
             raise ValueError(f"min_class must be one of {CLASS_NAMES}")
-        if len(self.V_LB) != 4:
+        if self.V_LB is not None and not any(self.V_LB):
+            raise ValueError("V_LB requires actual station velocities; all four are zero")
+        if self.V_LB is not None and len(self.V_LB) != 4:
             raise ValueError("V_LB needs four velocities (1 to 4 LB)")
         if self.slope is not None and self.slope < 0:
             raise ValueError("slope must be >= 0 or None")
@@ -503,7 +508,9 @@ def analyze(inp: Inputs) -> Results:
     if inp.yo >= r.D:
         r.regime = "Barrel full at outlet"
     elif inp.yo < r.yc:
-        r.regime = "Supercritical at brink; tailwater submerges jet"
+        r.regime = "Supercritical at brink"
+        if inp.TW > r.yc:
+            r.regime += "; tailwater submerges jet"
     else:
         r.regime = "Subcritical at brink"
     r.Vo_check = inp.Q / r.A
@@ -512,7 +519,11 @@ def analyze(inp: Inputs) -> Results:
         else "Does not match: check Q, width and outlet depth")
     r.ye = equivalent_depth(inp, r.A)
     r.Fr = inp.Vo / math.sqrt(g * r.ye)
+    if r.Fr >= 3:
+        raise ValueError("Fr >= 3: riprap basin procedure outside applicability")
     r.TW_ye = inp.TW / r.ye
+    if inp.V_LB is None and r.TW_ye > HIGH_TW_RATIO:
+        raise ValueError("V_LB required for high-tailwater jet screening")
     r.tailwater_case = ("High tailwater" if r.TW_ye > HIGH_TW_RATIO
                         else "Low tailwater")
 
@@ -548,8 +559,8 @@ def analyze(inp: Inputs) -> Results:
         r.trial_result = ("Shallow pool, hs/D50 below 2. Use a smaller class "
                           "for a basin or a larger class for no pool.")
     else:
-        r.trial_result = ("D50/ye is outside 0.1 to 0.7. Eq. 10.1 does not "
-                          "apply to this stone. Change the trial D50.")
+        r.trial_result = ("D50/ye is outside the HY-8 screen of 0.1 to 0.7. Do not "
+                          "use this trial. Change the trial D50.")
 
     # Largest class with a valid basin: walk D, C, B, A.
     r.largest_valid_class = NONE_OF_A_TO_D
@@ -606,9 +617,10 @@ def analyze(inp: Inputs) -> Results:
     r.high_tw_procedure = (
         "Yes, TW/ye > 0.75" if high_tw
         else "No, low tailwater: use the Sec 10.1 basin exit check")
-    r.decay_L = [r.LB * i for i in (1, 2, 3, 4)]
-    r.decay_V = list(inp.V_LB)
-    r.decay_ratio = [v / inp.Vo for v in inp.V_LB]
+    stations = inp.V_LB or []
+    r.decay_L = [r.LB * i for i in range(1, len(stations) + 1)]
+    r.decay_V = list(stations)
+    r.decay_ratio = [v / inp.Vo for v in stations]
 
     # ---- Block 7. Protection length --------------------------------------
     channel_faster = inp.V_channel > inp.V_perm
@@ -630,7 +642,7 @@ def analyze(inp: Inputs) -> Results:
 
     # ---- Block 8. Riprap sizing, Eq. 10.6 --------------------------------
     min_idx = _class_index(inp.min_class)
-    reach_V = [inp.Vo] + list(inp.V_LB[:3])  # velocity at upstream end
+    reach_V = [inp.Vo] + list(stations[:3]) if stations else []  # velocity at upstream end
     labels = ["Headwall to 1 LB", "1 LB to 2 LB", "2 LB to 3 LB",
               "3 LB to 4 LB"]
     r.reaches = []
@@ -644,9 +656,12 @@ def analyze(inp: Inputs) -> Results:
             within = "See block 7"
         r.reaches.append(Reach(label, start, r.LB * (i + 1), V, req,
                                _class_label(idx), within))
-    hw_idx = max(_class_index_for_d50(r.reaches[0].D50_required), min_idx,
-                 _class_index(r.smallest_no_pool_class))
-    r.headwall_class_lined = _class_name(hw_idx)
+    if r.reaches:
+        hw_idx = max(_class_index_for_d50(r.reaches[0].D50_required), min_idx,
+                     _class_index(r.smallest_no_pool_class))
+        r.headwall_class_lined = _class_name(hw_idx)
+    else:
+        r.headwall_class_lined = "Not evaluated"
 
     # ---- Block 9. Receiving channel check, HEC-15 shear basis -----------
     if inp.slope is None:
@@ -663,7 +678,7 @@ def analyze(inp: Inputs) -> Results:
             r.channel_class = "n/a"
         else:
             r.shear_result = "Exceeds vegetated lining"
-            # HEC-15 Shields form, bed only: D50 = tau / (0.047 (Ss-1) gamma)
+            # UNVERIFIED as a complete HEC-15 method. Legacy fixed-coefficient bed screen: D50 = tau / (0.047 (Ss-1) gamma)
             r.D50_channel = r.tau / (0.047 * (inp.Ss - 1.0) * inp.gamma_w)
             r.channel_class = _class_name(_class_index_for_d50(r.D50_channel))
 
@@ -733,15 +748,17 @@ def _option_1(r: Results) -> str:
 
 def _option_2(r: Results) -> str:
     """Block 10, Option 2: riprap basin (Sec 10.1)."""
-    if r.largest_valid_class == NONE_OF_A_TO_D:
-        return ("Not available. No scour pool forms with Classes A to D, so "
-                "there is no basin to build.")
     if r.trial_gives == GIVES_BASIN:
-        return (f"Class {r.largest_valid_class} basin: pool {_fmt1(r.hs)} ft "
+        name = next((c.label for c in r.classes if c.D50 == r.trial.D50),
+                    f"Trial D50 {r.trial.D50:g} ft")
+        return (f"{name} basin: pool {_fmt1(r.hs)} ft "
                 f"deep, {_fmt0(r.Ls)} ft pool + {_fmt0(r.La)} ft apron, "
                 f"{_fmt0(r.Wb)} ft wide at the downstream end. Sec 10.3 "
                 "classes from block 8 beyond the basin to the protection "
                 "length.")
+    if r.largest_valid_class == NONE_OF_A_TO_D:
+        return ("Not available. No scour pool forms with Classes A to D, so "
+                "there is no basin to build.")
     return (f"Available with Class {r.largest_valid_class}. Set the trial "
             "D50 to that class to fill block 5.")
 
@@ -921,7 +938,10 @@ def _as_key(text: Union[str, int, None], allow_float: bool = False):
 
 def _inputs_from_hy8_args(a: argparse.Namespace) -> Inputs:
     """Assemble Inputs from --hy8 and friends."""
-    import hy8_io  # local module, imported here to keep the core standalone
+    if __package__:
+        from . import hy8_io
+    else:
+        import hy8_io
 
     overrides: Dict = {}
     if a.v_lb is not None:
@@ -946,7 +966,7 @@ def _inputs_from_hy8_args(a: argparse.Namespace) -> Inputs:
         flow = -1  # resolved below to the last column
     inp = hy8_io.inputs_from_hy8(
         a.hy8, _as_key(a.crossing), _as_key(a.culvert), flow,
-        rst_path=a.rst, **overrides)
+        rst_path=a.rst, confirm_tailwater_datum=a.confirm_tailwater_datum, **overrides)
     if a.v_lb is None:
         print("WARNING: no --v-lb given; jet velocities at 1 to 4 LB are 0. "
               "Blocks 6 to 8 and 10 are placeholders until you enter the "
@@ -986,6 +1006,8 @@ def main(argv: Optional[List[str]] = None) -> int:
                           "total discharge in cfs (default: last column)")
     hy8.add_argument("--v-lb", nargs=4, type=float, metavar="V",
                      help="HY-8 jet velocity at 1, 2, 3, 4 LB, fps")
+    hy8.add_argument("--confirm-tailwater-datum", action="store_true",
+                     help="confirm WSE and outlet bed share a vertical datum")
     hy8.add_argument("--hs", type=float, help="HY-8 Pool Depth HS, ft")
     hy8.add_argument("--d50", type=float, help="trial D50, ft (default 0.75)")
     hy8.add_argument("--min-class", choices=CLASS_NAMES,
@@ -1008,16 +1030,33 @@ def main(argv: Optional[List[str]] = None) -> int:
         inp = _inputs_from_hy8_args(a)
     elif a.inputs:
         with open(a.inputs, encoding="utf-8") as fh:
-            inp = Inputs.from_dict(json.load(fh))
+            data = json.load(fh)
+            inp = Inputs.from_dict(data)
+            assumed = {key: getattr(inp, key) for key in
+                       ("V_perm", "tau_perm", "D50_trial", "Ss", "min_class", "embedment",
+                        "shape", "barrels") if key not in data}
+            if assumed:
+                print(f"Legacy workbook assumptions: {assumed}", file=sys.stderr)
     else:
         p.error("give an inputs JSON file, --hy8, --example or --template")
+
+    # Legacy defaults are retained for workbook regression and disclosed on import.
+    if a.hy8:
+        defaults = {key: getattr(inp, key) for key, supplied in (
+            ("V_perm", a.v_perm), ("tau_perm", a.tau_perm), ("D50_trial", a.d50),
+            ("min_class", a.min_class), ("Ss", None)) if supplied is None}
+        print(f"Legacy workbook assumptions: {defaults}", file=sys.stderr)
 
     if a.inputs_out:
         with open(a.inputs_out, "w", encoding="utf-8") as fh:
             json.dump(asdict(inp), fh, indent=2)
 
+    if not inp.V_LB or not any(inp.V_LB):
+        print("V_LB unavailable; calculation and design summary withheld.", file=sys.stderr)
+        return 2
     r = analyze(inp)
-    report = format_report(inp, r)
+    status = "DEVELOPMENT ONLY: legacy workbook regression; design verification pending"
+    report = "\n".join([status, format_report(inp, r), status])
     if a.out:
         with open(a.out, "w", encoding="utf-8") as fh:
             fh.write(report + "\n")
@@ -1025,7 +1064,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         print(report)
     if a.json_out:
         with open(a.json_out, "w", encoding="utf-8") as fh:
-            json.dump({"inputs": asdict(inp), "results": _results_to_dict(r)},
+            json.dump({"status": status, "inputs": asdict(inp), "results": _results_to_dict(r)},
                       fh, indent=2)
     return 0
 

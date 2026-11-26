@@ -74,10 +74,10 @@ def test_inputs_from_hy8_box():
 
 
 def test_inputs_from_hy8_selectors():
-    a = hy8_io.inputs_from_hy8(HY8, 0, 1, 3)  # by index
+    a = hy8_io.inputs_from_hy8(HY8, 0, 1, 3, confirm_tailwater_datum=True)  # by index
     b = hy8_io.inputs_from_hy8(HY8, "Oak Creek Road", "48 in RCP Relief",
-                               490.0)  # by total discharge
-    c = hy8_io.inputs_from_hy8(HY8, 0, 1, -2)  # negative = from the end
+                               490.0, confirm_tailwater_datum=True)  # by total discharge
+    c = hy8_io.inputs_from_hy8(HY8, 0, 1, -2, confirm_tailwater_datum=True)  # negative = from the end
     assert a.Q == b.Q == c.Q == 79.10
     assert a.shape == "circular"
     assert a.Wo == 4  # 1 barrel x 4 ft diameter
@@ -90,7 +90,7 @@ def test_inputs_from_hy8_selectors():
 
 
 def test_inputs_from_hy8_circular_multi_barrel():
-    inp = hy8_io.inputs_from_hy8(HY8, "Farm Access Lane", 0, "25-yr")
+    inp = hy8_io.inputs_from_hy8(HY8, "Farm Access Lane", 0, "25-yr", V_LB=[4, 3, 2, 1])
     assert inp.shape == "circular"
     assert inp.barrels == 3
     assert inp.rise == 3
@@ -118,5 +118,5 @@ def test_cli_hy8(tmp_path, capsys):
 
 
 def test_cli_hy8_warns_without_vlb(capsys):
-    h.main(["--hy8", str(HY8), "--culvert", "1"])
+    h.main(["--hy8", str(HY8), "--culvert", "1", "--confirm-tailwater-datum"])
     assert "no --v-lb" in capsys.readouterr().err

@@ -27,7 +27,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Union
 
-from hec14_outlet_protection import Inputs
+if __package__:
+    from .hec14_outlet_protection import Inputs
+else:  # Standalone legacy CLI
+    from hec14_outlet_protection import Inputs
 
 # HY-8 8.x ShapeDB order. Project files store a one-based index.
 SHAPE_NAMES = (
@@ -189,7 +192,10 @@ def read_hy8(path: Union[str, Path]) -> Hy8Project:
         elif key == "STARTCULVNOTES":
             in_notes = "ENDCULVNOTES"
         elif key == "UNITS":
-            project.units_flag = _int(value)
+            try:
+                project.units_flag = int(value.strip())
+            except ValueError as exc:
+                raise ValueError("Invalid HY-8 units flag") from exc
         elif key == "PROJTITLE":
             project.title = _string(value)
         elif key == "STARTCROSSING":
@@ -368,7 +374,7 @@ def _flow_index(crossing: Hy8Crossing, table: RstTable,
     if isinstance(flow, int) and not isinstance(flow, bool):
         if -len(totals) <= flow < len(totals):
             return flow % len(totals)  # negative counts from the end
-        raise ValueError(f"flow index {flow} out of range (0 to {len(totals) - 1})")
+        flow = float(flow)  # Outside the column range, interpret as cfs.
     if isinstance(flow, float):
         for i, q in enumerate(totals):
             if q is not None and abs(q - flow) <= 0.5:
@@ -389,6 +395,7 @@ def inputs_from_hy8(hy8_path: Union[str, Path],
                     culvert: Union[str, int],
                     flow: Union[str, int, float],
                     rst_path: Optional[Union[str, Path]] = None,
+                    *, confirm_tailwater_datum: bool = False,
                     **overrides) -> Inputs:
     """Build block 1 ``Inputs`` from an HY-8 project and its results.
 
@@ -413,6 +420,10 @@ def inputs_from_hy8(hy8_path: Union[str, Path],
             "writes the results file, or pass rst_path.")
 
     project = read_hy8(hy8_path)
+    # Only the synthetic English-unit convention has been exercised.
+    # UNVERIFIED: production HY-8 embedment units and SLRIPRAP card.
+    if project.units_flag != 0:
+        raise ValueError("Unsupported or missing HY-8 units flag; English units required")
     xing = project.crossing(crossing)
     culv = _pick(xing.culverts, culvert, "culvert")
     shape = SHAPE_TO_INPUT.get(culv.shape)
@@ -424,9 +435,11 @@ def inputs_from_hy8(hy8_path: Union[str, Path],
     rst_xing = _pick_rst_crossing(results, xing)
     table = rst_xing.culvert_summary(culv.name if isinstance(culvert, str)
                                      else culvert)
-    for prefix, want in (("Outlet Depth", "ft"), ("Outlet Velocity", "ft/s")):
+    for prefix, want in (("Outlet Depth", "ft"), ("Outlet Velocity", "ft/s"),
+                         ("Total Discharge", "cfs"), ("Culvert Discharge", "cfs"),
+                         ("Tailwater Depth", "ft"), ("Tailwater Velocity", "ft/s")):
         unit = table.unit(prefix)
-        if unit and unit != want:
+        if unit != want:
             raise ValueError(f"{prefix} is in {unit}; expected {want}. Run "
                              "HY-8 in English units.")
 
@@ -438,6 +451,36 @@ def inputs_from_hy8(hy8_path: Union[str, Path],
         if v is None:
             raise ValueError(f"{prefix} is blank for flow column {i}")
         return v
+
+    # UNVERIFIED for production HY-8 files. Use a matching elevation in feet,
+    # never infer the elevation datum from the summary depth alone.
+    if "TW" in overrides:
+        outlet_tw = overrides["TW"]
+    else:
+        elevations = []
+        for other in rst_xing.tables:
+            if other.culvert_index != table.culvert_index or other.unit("Tailwater Elevation") != "ft":
+                continue
+            if other.unit("Total Discharge") != "cfs" or other.row("Total Discharge") != table.row("Total Discharge"):
+                continue
+            values = other.row("Tailwater Elevation")
+            if i < len(values) and values[i] is not None:
+                elevations.append(values[i])
+        if len(set(elevations)) != 1 or culv.outlet_invert_ft is None:
+            raise ValueError("Confirm outlet-relative TW in ft: missing or ambiguous elevation datum")
+        bed = culv.outlet_invert_ft + overrides.get("embedment", culv.embed_depth_ft)
+        outlet_tw = max(0.0, elevations[0] - bed)
+        reported = val("Tailwater Depth")
+        # 0.01 ft is the precision of the fixture's printed elevations.
+        if abs(outlet_tw - reported) <= 0.0100001:
+            outlet_tw = reported
+        else:
+            import warnings
+            detail = (f"Summary TW {reported:g} ft differs from outlet-relative TW "
+                      f"{outlet_tw:g} ft (WSE {elevations[0]:g}, bed {bed:g} ft).")
+            if not confirm_tailwater_datum:
+                raise ValueError(detail + " Confirm the common elevation datum to continue.")
+            warnings.warn(detail, UserWarning, stacklevel=2)
 
     span = culv.span_ft
     data = dict(
@@ -453,7 +496,7 @@ def inputs_from_hy8(hy8_path: Union[str, Path],
         Q=val("Culvert Discharge"),
         yo=val("Outlet Depth"),
         Vo=val("Outlet Velocity"),
-        TW=val("Tailwater Depth"),
+        TW=outlet_tw,
         V_channel=val("Tailwater Velocity"),
         Wo=culv.barrels * span,
         rise=culv.rise_ft,
