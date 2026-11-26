@@ -11,7 +11,7 @@ code needs newer than 3.9, but older versions are not tested).
 ## Run
 
 ```bash
-# Built-in worked example (US176 Culvert 1)
+# Built-in worked example (***** Culvert 1)
 python hec14_outlet_protection.py --example culv1
 
 # From HY-8 files (reads .hy8 and the matching .rst written by HY-8)
@@ -112,7 +112,7 @@ and should match the HY-8 Basin Length.
 ## Verification
 
 `test_hec14_outlet_protection.py` checks every computed cell of the three
-US176 culvert tabs (Culverts 1, 2 and 4) to 1e-9, plus branch coverage for
+***** culvert tabs (Culverts 1, 2 and 4) to 1e-9, plus branch coverage for
 the C0 curves, the Excel CEILING rounding, interpolation past 4 LB, class
 selection, the low tailwater path, the LB gate, circular geometry (segment
 area, chord, critical depth, embedment, full barrel) and input validation.
@@ -125,7 +125,7 @@ and 3.13.
 - **LB gate.** The workbook used Ls + La whenever the trial stone's envelope
   hs was positive, even if D50/ye was outside 0.1 to 0.7 or hs/D50 < 2. This
   port uses Ls + La only for a valid basin and 4 Wo otherwise. No effect on
-  the three US176 culverts.
+  the three ***** culverts.
 - **Circular outlets** are supported (above). The workbook was box only.
 
 ## Known limits
