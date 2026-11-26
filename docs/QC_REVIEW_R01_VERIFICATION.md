@@ -66,7 +66,7 @@ Legend: **Confirmed** = I reproduced it in code or by reading. **Disputed** = ev
 | M-08 Tests collect only under `python -m pytest` | Confirmed | Bare `pytest`: 3 collection errors. Upstream `pytest.ini` (blob 1804137) and `.github/workflows/tests.yml` exist at `e0cf993` and were not copied. |
 | M-09 Orbit failure marks valid case as error | Confirmed by reading | `reporting.py:29-30` calls `export_orbit` after writing files; `visuals.py:26-27` raises for no basin; `export_batch` records the whole case as error. Not run (no plotly). |
 | M-10 QC PDF thin | Confirmed by reading | `reporting.py:18-28`. Raw unrounded floats printed. |
-| M-11 Real project ID in public repo | Confirmed | "US176" in `EXAMPLES`, legacy tests, README. Inherited from public upstream. |
+| M-11 Real project ID in public repo | Confirmed | "*****" in `EXAMPLES`, legacy tests, README. Inherited from public upstream. |
 | M-12 Parser only run on synthetic fixtures | Confirmed (fixture header) / Unverified (`SLRIPRAP` card meaning) | |
 | M-13 `--flow 490` read as index | Confirmed | "flow index 490 out of range (0 to 4)"; `490.0` runs. |
 | M-14 GUI gaps | Confirmed by reading | Not run here either. |
