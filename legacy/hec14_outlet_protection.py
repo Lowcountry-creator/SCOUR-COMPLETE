@@ -864,12 +864,12 @@ def format_report(inp: Inputs, r: Results) -> str:
 
 
 # --------------------------------------------------------------------------
-# Worked examples (US176 culverts from the source workbook)
+# Worked examples (***** culverts from the source workbook)
 # --------------------------------------------------------------------------
 
 EXAMPLES: Dict[str, Inputs] = {
     "culv1": Inputs(
-        project="US176", culvert="Culvert 1",
+        project="*****", culvert="Culvert 1",
         description="Dual 7 ft x 7 ft RCB, run in HY-8 as one 14 ft wide outlet",
         design_storm="50-yr (SCDOT primary route)",
         Q=639.56, Wo=14, rise=7, embedment=1, yo=2.8, Vo=16.32, TW=5.14,
@@ -877,7 +877,7 @@ EXAMPLES: Dict[str, Inputs] = {
         D50_trial=0.75, min_class="B",
         V_LB=[11.741, 6.235, 4.145, 3.102], HS_hy8=1.819),
     "culv2": Inputs(
-        project="US176", culvert="Culvert 2",
+        project="*****", culvert="Culvert 2",
         description="Dual 6 ft x 6 ft RCB, run in HY-8 as one 12 ft wide outlet",
         design_storm="50-yr (SCDOT primary route)",
         Q=303.1, Wo=12, rise=6, embedment=1, yo=5, Vo=5.05, TW=5.27,
@@ -885,7 +885,7 @@ EXAMPLES: Dict[str, Inputs] = {
         D50_trial=0.75, min_class="B",
         V_LB=[4.291, 2.794, 1.857, 1.39], HS_hy8=None),
     "culv4": Inputs(
-        project="US176", culvert="Culvert 4",
+        project="*****", culvert="Culvert 4",
         description="Dual 7 ft x 7 ft RCB, run in HY-8 as one 14 ft wide outlet",
         design_storm="50-yr (SCDOT primary route)",
         Q=453, Wo=14, rise=7, embedment=1, yo=3.96, Vo=8.17, TW=3.96,

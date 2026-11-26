@@ -1,7 +1,7 @@
 """Regression tests: script output against the source workbook.
 
 Expected values are the Excel-computed cells from
-Outlet_Protection_Calcs (US176 Culverts 1, 2 and 4). Tolerances are tight
+Outlet_Protection_Calcs (***** Culverts 1, 2 and 4). Tolerances are tight
 because the formulas are the same; any drift means a formula changed.
 """
 
